@@ -9,8 +9,6 @@ namespace MakinaCorpus\CoreBus\Attr;
  *
  * Usage:
  *   #[Async]
- *
- * @Annotation
  */
 #[\Attribute]
 final class Async extends Command

@@ -29,20 +29,6 @@ services:
         alias: corebus.event_buffer.manager.array
 
     #
-    # Attribute loader.
-    #
-
-    corebus.attributes.loader.chain:
-        class: MakinaCorpus\CoreBus\Attribute\Loader\ChainAttributeLoader
-        arguments: [[]]
-
-    corebus.attributes.loader:
-        alias: corebus.attributes.loader.chain
-
-    MakinaCorpus\CoreBus\Attribute\AttributeLoader:
-        alias: corebus.attributes.loader.chain
-
-    #
     # Buses and handler locators
     #
 
@@ -89,7 +75,6 @@ services:
             - "@corebus.event.bus.external"
             - "@corebus.event_buffer.manager"
             - "@corebus.transaction.manager"
-            - "@corebus.attributes.loader"
 
     corebus.command.bus.asynchronous:
         alias: corebus.bus.transactional

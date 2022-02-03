@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace MakinaCorpus\CoreBus\Bridge\Symfony\DependencyInjection\Compiler;
 
 use MakinaCorpus\CoreBus\Cache\Type\CallableReferenceListPhpDumper;
-use MakinaCorpus\CoreBus\EventBus\EventListener;
 use MakinaCorpus\CoreBus\Implementation\Type\NullCallableReferenceList;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Definition;
@@ -20,6 +19,10 @@ final class RegisterEventListenerPass implements CompilerPassInterface
      */
     public function process(ContainerBuilder $container)
     {
+        if (!$container->hasDefinition('corebus.event.listener.locator.container')) {
+            return;
+        }
+
         $dumpedClassName = CallableReferenceListPhpDumper::getDumpedClassName('event');
         $dumpedFileName = CallableReferenceListPhpDumper::getFilename($container->getParameter('kernel.cache_dir'), 'event');
 
@@ -29,14 +32,13 @@ final class RegisterEventListenerPass implements CompilerPassInterface
             $definition = $container->getDefinition($id);
             $className = $definition->getClass();
 
-            if (!$reflexion = $container->getReflectionClass($className)) {
+            if (!$container->getReflectionClass($className)) {
                 throw new InvalidArgumentException(\sprintf('Class "%s" used for service "%s" cannot be found.', $className, $id));
             }
 
-            if ($reflexion->implementsInterface(EventListener::class)) {
-                $definition->setPublic(true);
-                $dumper->appendFromClass($className, $id);
-            }
+            // @todo Later, use a service locator instead.
+            $definition->setPublic(true);
+            $dumper->appendFromClass($className, $id);
         }
 
         if ($dumper->isEmpty()) {
@@ -45,7 +47,6 @@ final class RegisterEventListenerPass implements CompilerPassInterface
             $serviceClassName = NullCallableReferenceList::class;
             $definition = new Definition();
             $definition->setClass($serviceClassName);
-            $definition->setPrivate(true);
             $container->setDefinition($serviceClassName, $definition);
         } else {
             $dumper->dump($dumpedClassName);
@@ -54,7 +55,6 @@ final class RegisterEventListenerPass implements CompilerPassInterface
             $definition = new Definition();
             $definition->setClass($serviceClassName);
             $definition->setFile($dumpedFileName);
-            $definition->setPrivate(true);
             $container->setDefinition($serviceClassName, $definition);
         }
 

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace MakinaCorpus\CoreBus\Cache\Type;
 
 use MakinaCorpus\CoreBus\Implementation\Type\CallableReference;
-use MakinaCorpus\CoreBus\Implementation\Type\DefaultCallableReferenceList;
+use MakinaCorpus\CoreBus\Implementation\Type\ClassParser;
 use Symfony\Component\Filesystem\Exception\IOException;
 
 class CallableReferenceListPhpDumper
@@ -22,40 +22,53 @@ class CallableReferenceListPhpDumper
         $this->withParents = $withParents;
     }
 
+    /**
+     * Compute absolute filename.
+     */
     public static function getFilename(string $kernelCacheDirectory, string $tag): string
     {
         return $kernelCacheDirectory . '/corebus_handler_callback_' . $tag . '.php';
     }
 
+    /**
+     * Compute and get dumped class namespace.
+     */
     public static function getDumpedClassNamespace(): string
     {
         return 'MakinaCorpus\CoreBus\Cache\Type\Generated';
     }
 
+    /**
+     * Compute and get dumped local class name.
+     */
     public static function getDumpedClassName(string $tag): string
     {
         return \ucfirst($tag) . 'DumpedCallableReferenceList';
     }
 
-    public function appendFromClass(
-        string $handlerClassName,
-        ?string $handlerServiceId = null,
-        ?string $parameterInterfaceName = null
-    ): void {
-        foreach (DefaultCallableReferenceList::findHandlerMethods(
-            $handlerClassName,
-            $handlerServiceId,
-            $parameterInterfaceName
-        ) as $reference) {
+    /**
+     * Append items from the given handler class.
+     */
+    public function appendFromClass(string $handlerClassName, ?string $handlerServiceId = null): void
+    {
+        $classParser = new ClassParser();
+
+        foreach ($classParser->lookup($handlerClassName) as $reference) {
             $this->append($reference);
         }
     }
 
+    /**
+     * Is this reference list empty.
+     */
     public function isEmpty(): bool
     {
         return empty($this->references);
     }
 
+    /**
+     * Delete existing file, if any.
+     */
     public function delete(): void
     {
         if (\file_exists($this->filename)) {
@@ -65,6 +78,9 @@ class CallableReferenceListPhpDumper
         }
     }
 
+    /**
+     * Dump file.
+     */
     public function dump(string $dumpedClassName): void
     {
         $this->delete();
@@ -132,13 +148,13 @@ PHP
             foreach ($references as $reference) {
                 \assert($reference instanceof CallableReference);
 
-                $escapedHandlerClassName = \addslashes($reference->className);
+                $escapedCommandClassName = \addslashes($reference->className);
                 $escapedMethodName = \addslashes($reference->methodName);
                 $escapedServiceId = \addslashes($reference->serviceId);
 
                 \fwrite($handle, <<<PHP
                     new CallableReference(
-                        '{$escapedHandlerClassName}',
+                        '{$escapedCommandClassName}',
                         '{$escapedMethodName}',
                         '{$escapedServiceId}'
                     ),
@@ -168,8 +184,15 @@ PHP
         \fclose($handle);
     }
 
-    private function append(CallableReference $reference): void
+    /**
+     * Prepare, validate and append given reference.
+     */
+    private function append(CallableReference $reference, ?string $handlerServiceId = null): void
     {
+        if ($handlerServiceId) {
+            $reference->serviceId = $handlerServiceId;
+        }
+
         $existing = $this->references[$reference->className][0] ?? null;
 
         if ($existing && !$this->allowMultiple) {

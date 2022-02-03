@@ -6,6 +6,7 @@ namespace MakinaCorpus\CoreBus\Tests\Implementation\Mock;
 
 use MakinaCorpus\CoreBus\CommandBus\CommandHandler;
 
+#[\MakinaCorpus\CoreBus\Attr\CommandHandler]
 final class MockHandler implements CommandHandler
 {
     /**

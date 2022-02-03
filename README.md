@@ -1,15 +1,7 @@
 # CoreBus - Command and event buses interface and logic
 
 This package serves the purpose of sharing interfaces and internal logic
-for hexagonal architecture, domain-driven set of projects, command and event
-bus.
-
-Let's be honest, the fact is, using this library breaks the oignon architecture
-since you'll be dependent upon an external package. Fact is, we do need a way
-to share this without copy/pasting it in every project, so here we go, breaking
-out the hexagone.
-
-That'll be the only exception, I promise.
+for command-handler-event architectured projects.
 
 # Design
 
@@ -17,17 +9,15 @@ That'll be the only exception, I promise.
 
 Expected runtime flow is the following:
 
- - Commands may be dispatched to trigger writes in the system,
- - Commands are always asynchronously handled (you may have a return
-   response under certain circumstances) if the expected behavior remains
-   unspecified,
- - One command implies one transaction on your database backend,
+ - Commands may be dispatched to trigger writes in the system.
+ - Commands are always asynchronously handled, they may return a response.
+ - One command implies one transaction on your database backend.
  - During a single command processing, the domain code may raise one or many
-   domain events,
+   domain events.
  - Domain events are always dispatched synchronously within your domain
    code, within the triggering command transaction.
 
-During the full command processing, the database transaction will be
+During the whole command processing, the database transaction will be
 isolated if the backend permits it. Commit is all or nothing, including
 events being emitted during the process.
 
@@ -37,12 +27,12 @@ Transaction handling will be completely hidden in the implementations,
 your business code will never see it, here is how it works:
 
  - Domain events while emitted and dispatched internally are stored along
-   the way into a volatile temporary buffer,
- - Once command is comsumed and task has ended, transaction will commit,
+   the way into a volatile in-memory temporary buffer.
+ - Once command is comsumed and task has ended, transaction will commit.
  - In case of success, buffer is flushed and events may be sent to a bus
-   for external application to listen to,
+   for external application to listen to.
  - In case of failure, transaction rollbacks, event buffer is emptied,
-   events are dropped into void.
+   events are discarded without further action.
 
 Transactions can be disabled on a per-command basis, using PHP attributes
 on the command class.
@@ -64,7 +54,7 @@ dispatcher. Two options are possible:
 Two implementations are provided:
 
  - In-memory bus, along with null transaction handling (no transaction at all)
-   ideal for prototyping and unit-testing,
+   ideal for prototyping and unit-testing.
  - PostgreSQL bus implementation using `makinacorpus/goat-query`, transaction
    handling using the same database connection, reliable and guaranteing data
    consistency.
@@ -95,7 +85,6 @@ Then add into your `Kernel.php` file:
 
 ```php
 
-use MakinaCorpus\CoreBus\Bridge\Symfony\DependencyInjection\Compiler\RegisterAttributeLoaderPass;
 use MakinaCorpus\CoreBus\Bridge\Symfony\DependencyInjection\Compiler\RegisterCommandHandlerPass;
 use MakinaCorpus\CoreBus\Bridge\Symfony\DependencyInjection\Compiler\RegisterEventInfoExtractorPass;
 use MakinaCorpus\CoreBus\Bridge\Symfony\DependencyInjection\Compiler\RegisterEventListenerPass;
@@ -134,7 +123,6 @@ class Kernel extends BaseKernel
             ->addMethodCall('setCommandBus', [new Reference(CommandBus::class)])
         ;
 
-        $container->addCompilerPass(new RegisterAttributeLoaderPass());
         $container->addCompilerPass(new RegisterCommandHandlerPass());
         $container->addCompilerPass(new RegisterEventListenerPass());
         $container->addCompilerPass(new RegisterEventInfoExtractorPass());
@@ -146,6 +134,8 @@ leave all complex configuration to you, allowing you much more flexibility in
 your application design.
 
 # Usage
+
+## Commands and events
 
 Write a simple command:
 
@@ -181,15 +171,18 @@ final class HelloWasSaidEvent
 }
 ```
 
+## Register handlers using base class
+
+
 Tie a single command handler:
 
 ```php
 
 declare(strict_types=1);
 
-use MakinaCorpus\CoreBus\CommandBus\AbstractHandler;
+use MakinaCorpus\CoreBus\CommandBus\AbstractCommandHandler;
 
-final class SayHello extends AbstractHandler
+final class SayHello extends AbstractCommandHandler
 {
     /*
      * Method name is yours, you may have more than one handler in the
@@ -231,11 +224,67 @@ final class SayHello implements EventListener
 If you correctly plug the Symfony container machinery, glue will be
 completely transparent as long as you implement the correct interfaces.
 
+## Register handlers using attributes
+
+
+Tie a single command handler:
+
+```php
+
+declare(strict_types=1);
+
+use MakinaCorpus\CoreBus\EventBus\EventBusAware;
+use MakinaCorpus\CoreBus\EventBus\EventBusAwareTrait;
+
+final class SayHello EventBusAware
+{
+    use EventBusAwareTrait;
+
+    /*
+     * Method name is yours, you may have more than one handler in the
+     * same class, do you as wish. Only important thing is to implement
+     * the Handler interface (here via the AbstractHandler class).
+     */
+    #[MakinaCorpus\CoreBus\Attr\CommandHandler]
+    public function do(SayHelloCommand $command)
+    {
+        echo "Hello, ", $command->name, "\n";
+
+        $this->notifyEvent(new HelloWasSaidEvent($command->name));
+    }
+}
+```
+
+You may also write as many event listeners as you wish, then even
+may emit events themselves:
+
+```php
+
+declare(strict_types=1);
+
+final class SayHello
+{
+    /*
+     * Method name is yours, you may have more than one handler in the
+     * same class, do you as wish. Only important thing is to implement
+     * the EventListener interface.
+     */
+    #[MakinaCorpus\CoreBus\Attr\EventListener]
+    public function on(HelloWasSaidEvent $event)
+    {
+        $this->logger->debug("Hello was said to {name}.", ['name' => $event->name]);
+    }
+}
+```
+
+If you correctly plug the Symfony container machinery, glue will be
+completely transparent as long as you implement the correct interfaces.
+
 # Using attributes
 
 This package comes with an attribute support for annotating commands and events
-in order to infer behaviours to the bus. This allows to declare commands or
-event behaviour without the need of tainted domain code.
+in order to infer behaviors to the bus. This allows to declare commands or
+event behaviour without tainting the domain code.
 
 ## Command attributes
 
@@ -259,23 +308,21 @@ event behaviour without the need of tainted domain code.
    type is only mandatory for aggregate stream creation events, identifier will
    be enough for appending event in an existing stream.
 
-## Usage with older PHP versions
+## Configuration attributes
 
-Where PHP core attributes (available since PHP 8) are recommended, for
-consistency and performance reasons, all provided attributes will also work
-transparently being instanciated as doctrine annotations. For this to work,
-you need to add the `doctrine/annotations` package.
+ - `#[MakinaCorpus\CoreBus\Attr\CommandHandler]` if set on a class, will force
+   the bus to introspect all methods and register all its methods as command
+   handlers, if on a single method, will register this explicit method as being
+   a command handler.
 
-If you are using Symfony you also need to enable annotations in the
-`config/packages/framework.yaml` file:
+ - `#[MakinaCorpus\CoreBus\Attr\EventListener]` if set on a class, will force
+   the bus to introspect all methods and register all its methods as event
+   listeners, if on a single method, will register this explicit method as being
+   an event listener.
 
-```yaml
-framework:
-    # ... Your other options
-
-    annotations:
-        enabled: true
-```
+For all those attributes, parameters are optional, but you might set the
+`target` parameter to disambiguate which class the handler or listener catches.
+Using this, you can use interfaces for matching instead of concrete classes.
 
 # Overriding implementations
 

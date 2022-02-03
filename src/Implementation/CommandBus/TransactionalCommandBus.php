@@ -38,7 +38,6 @@ final class TransactionalCommandBus implements SynchronousCommandBus, EventBus, 
 {
     use LoggerAwareTrait;
 
-    private AttributeLoader $attributeLoader;
     private CommandBus $commandBus;
     private EventBus $internalEventBus;
     private EventBus $externalEventBus;
@@ -51,10 +50,8 @@ final class TransactionalCommandBus implements SynchronousCommandBus, EventBus, 
         EventBus $internalEventBus,
         EventBus $externalEventBus,
         EventBufferManager $eventBufferManager,
-        TransactionManager $transactionManager,
-        AttributeLoader $attributeLoader
+        TransactionManager $transactionManager
     ) {
-        $this->attributeLoader = $attributeLoader;
         $this->commandBus = $commandBus;
         $this->internalEventBus = $internalEventBus;
         $this->externalEventBus = $externalEventBus;
@@ -82,11 +79,7 @@ final class TransactionalCommandBus implements SynchronousCommandBus, EventBus, 
         }
 
         try {
-            $disableTransaction = (!$multiple) && $this
-                ->attributeLoader
-                ->loadFromClass(\get_class($command))
-                ->has(NoTransaction::class)
-            ;
+            $disableTransaction = (!$multiple) && (new AttributeLoader())->loadFromClass(\get_class($command))->has(NoTransaction::class);
 
             if ($disableTransaction) {
                 $this->logger->notice("TransactionalCommandBus: Running {command} without transaction.", ['command' => \get_class($command)]);

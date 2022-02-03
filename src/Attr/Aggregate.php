@@ -15,8 +15,6 @@ namespace MakinaCorpus\CoreBus\Attr;
  *   #[Aggregate("eventPropertyName", "AggregateTypeAsString")]
  *   #[Aggregate("eventPropertyName", SomeClass::class)]
  *   #[Aggregate("eventPropertyName")]
- *
- * @Annotation
  */
 #[\Attribute]
 final class Aggregate extends DomainEvent
@@ -24,20 +22,10 @@ final class Aggregate extends DomainEvent
     private string $aggregateIdPropertyName;
     private ?string $aggregateType = null;
 
-    public function __construct($aggregateIdPropertyName, $aggregateType = null)
+    public function __construct(string $aggregateIdPropertyName, ?string $aggregateType = null)
     {
-        // Doctrine BC compat (is_array() call).
-        if (\is_array($aggregateIdPropertyName)) {
-            if (\is_array($aggregateIdPropertyName['value'])) {
-                $this->aggregateIdPropertyName = $aggregateIdPropertyName['value'][0];
-                $this->aggregateType = $aggregateIdPropertyName['value'][1] ?? null;
-            } else {
-                $this->aggregateIdPropertyName = $aggregateIdPropertyName['value'];
-            }
-        } else {
-            $this->aggregateIdPropertyName = $aggregateIdPropertyName;
-            $this->aggregateType = $aggregateType;
-        }
+        $this->aggregateIdPropertyName = $aggregateIdPropertyName;
+        $this->aggregateType = $aggregateType;
     }
 
     public function getAggregateIdPropertyName(): string

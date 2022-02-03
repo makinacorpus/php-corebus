@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace MakinaCorpus\CoreBus\Bridge\Symfony;
 
-use MakinaCorpus\CoreBus\Bridge\Symfony\DependencyInjection\Compiler\RegisterAttributeLoaderPass;
 use MakinaCorpus\CoreBus\Bridge\Symfony\DependencyInjection\Compiler\RegisterCommandHandlerPass;
 use MakinaCorpus\CoreBus\Bridge\Symfony\DependencyInjection\Compiler\RegisterEventInfoExtractorPass;
 use MakinaCorpus\CoreBus\Bridge\Symfony\DependencyInjection\Compiler\RegisterEventListenerPass;
@@ -45,7 +44,6 @@ final class CoreBusBundle extends Bundle
             ->addMethodCall('setCommandBus', [new Reference(CommandBus::class)])
         ;
 
-        $container->addCompilerPass(new RegisterAttributeLoaderPass());
         $container->addCompilerPass(new RegisterCommandHandlerPass());
         $container->addCompilerPass(new RegisterEventListenerPass());
         $container->addCompilerPass(new RegisterEventInfoExtractorPass());

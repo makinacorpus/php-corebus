@@ -11,18 +11,15 @@ namespace MakinaCorpus\CoreBus\Attr;
  * Usage:
  *   #[Retry(4)]
  *   #[Retry]
- *
- * @Annotation
  */
 #[\Attribute]
 final class Retry extends Command
 {
     private int $count;
 
-    public function __construct($count = null)
+    public function __construct(?int $count = null)
     {
-        // Doctrine BC compat (is_array() call).
-        $this->count = $count ? (int) (\is_array($count) ? $count['value'] : $count) : 3;
+        $this->count = $count ?? 3;
     }
 
     public function getRetryCount(): string

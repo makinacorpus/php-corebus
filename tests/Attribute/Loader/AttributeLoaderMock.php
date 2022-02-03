@@ -5,10 +5,6 @@ declare(strict_types=1);
 namespace MakinaCorpus\CoreBus\Tests\Attribute\Loader;
 
 /**
- * @UnrelatedAnnotation()
- * @MakinaCorpus\CoreBus\Attr\Aggregate("foo", AttributeLoaderMock::class)
- * @MakinaCorpus\CoreBus\Attr\Async
- * @MakinaCorpus\CoreBus\Attr\Retry(10)
  * @codeCoverageIgnore
  */
 #[\MakinaCorpus\CoreBus\Attr\Aggregate("foo", AttributeLoaderMock::class)]
@@ -16,12 +12,6 @@ namespace MakinaCorpus\CoreBus\Tests\Attribute\Loader;
 #[\MakinaCorpus\CoreBus\Attr\Retry(10)]
 abstract class AttributeLoaderMock
 {
-    /**
-     * @UnrelatedAnnotation()
-     * @MakinaCorpus\CoreBus\Attr\Aggregate("foo", AttributeLoaderMock::class)
-     * @MakinaCorpus\CoreBus\Attr\Async
-     * @MakinaCorpus\CoreBus\Attr\Retry(10)
-     */
     #[\MakinaCorpus\CoreBus\Attr\Aggregate("foo", AttributeLoaderMock::class)]
     #[\MakinaCorpus\CoreBus\Attr\Async]
     #[\MakinaCorpus\CoreBus\Attr\Retry(10)]
@@ -43,13 +33,5 @@ abstract class AttributeLoaderMock
 #[\MakinaCorpus\CoreBus\Attr\Async]
 #[\MakinaCorpus\CoreBus\Attr\Retry(10)]
 function readPoliciesFromMe(): void
-{
-}
-
-/**
- * @Annotation
- * @codeCoverageIgnore
- */
-final class UnrelatedAnnotation
 {
 }

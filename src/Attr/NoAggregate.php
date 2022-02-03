@@ -13,8 +13,6 @@ namespace MakinaCorpus\CoreBus\Attr;
  *
  * Usage:
  *   #[NoAggregate]
- *
- * @Annotation
  */
 #[\Attribute]
 final class NoAggregate extends DomainEvent

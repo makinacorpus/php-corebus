@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace MakinaCorpus\CoreBus\Bridge\Symfony\Serializer\Normalizer;
 
 use MakinaCorpus\CoreBus\CommandBus\Transaction\MultiCommand;
-use MakinaCorpus\CoreBus\CommandBus\Transaction\MultiCommandEnvelope;
 use Symfony\Component\Serializer\SerializerAwareInterface;
 use Symfony\Component\Serializer\SerializerAwareTrait;
 use Symfony\Component\Serializer\Exception\InvalidArgumentException;

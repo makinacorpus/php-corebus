@@ -9,7 +9,7 @@ use MakinaCorpus\CoreBus\Attribute\AttributeLoader;
 use MakinaCorpus\CoreBus\Attribute\Error\AttributeError;
 use PHPUnit\Framework\TestCase;
 
-abstract class AbstractAttributeLoaderTest extends TestCase
+class AttributeLoaderTest extends TestCase
 {
     public function testLoadFromClass(): void
     {
@@ -78,5 +78,8 @@ abstract class AbstractAttributeLoaderTest extends TestCase
         self::markTestIncomplete();
     }
 
-    abstract protected function createAttributeLoader(): AttributeLoader;
+    private function createAttributeLoader(): AttributeLoader
+    {
+        return new AttributeLoader();
+    }
 }

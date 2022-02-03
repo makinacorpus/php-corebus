@@ -13,8 +13,6 @@ namespace MakinaCorpus\CoreBus\Attr;
  *
  * Usage:
  *   #[NoStore]
- *
- * @Annotation
  */
 #[\Attribute]
 final class NoStore extends DomainEvent

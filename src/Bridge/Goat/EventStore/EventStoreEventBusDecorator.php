@@ -33,15 +33,12 @@ final class EventStoreEventBusDecorator implements EventBus
     private EventBus $decorated;
     private EventStore $eventStore;
     private EventInfoExtrator $eventInfoExtractor;
-    private AttributeLoader $attributeLoader;
 
     public function __construct(
         EventBus $decorated,
         EventStore $eventStore,
-        EventInfoExtrator $eventInfoExtractor,
-        AttributeLoader $attributeLoader
+        EventInfoExtrator $eventInfoExtractor
     ) {
-        $this->attributeLoader = $attributeLoader;
         $this->decorated = $decorated;
         $this->eventInfoExtractor = $eventInfoExtractor;
         $this->eventStore = $eventStore;
@@ -55,7 +52,7 @@ final class EventStoreEventBusDecorator implements EventBus
         $eventInfo = new EventInfo();
         $this->eventInfoExtractor->extract($event, $eventInfo);
 
-        if ($this->attributeLoader->loadFromClass(\get_class($event))->has(NoStore::class)) {
+        if ((new AttributeLoader())->loadFromClass($event)->has(NoStore::class)) {
             return;
         }
 

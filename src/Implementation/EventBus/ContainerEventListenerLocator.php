@@ -7,7 +7,7 @@ namespace MakinaCorpus\CoreBus\Implementation\EventBus;
 use MakinaCorpus\CoreBus\EventBus\EventListenerLocator;
 use MakinaCorpus\CoreBus\Implementation\Type\CallableReference;
 use MakinaCorpus\CoreBus\Implementation\Type\CallableReferenceList;
-use MakinaCorpus\CoreBus\Implementation\Type\DefaultCallableReferenceList;
+use MakinaCorpus\CoreBus\Implementation\Type\RuntimeCallableReferenceList;
 use Symfony\Component\DependencyInjection\ContainerAwareInterface;
 use Symfony\Component\DependencyInjection\ContainerAwareTrait;
 
@@ -25,7 +25,7 @@ final class ContainerEventListenerLocator implements EventListenerLocator, Conta
         if ($references instanceof CallableReferenceList) {
             $this->referenceList = $references;
         } else if (\is_array($references)) {
-            $this->referenceList = new DefaultCallableReferenceList(null, true);
+            $this->referenceList = new RuntimeCallableReferenceList(true);
             foreach ($references as $id => $className) {
                 $this->referenceList->appendFromClass($className, $id);
             }

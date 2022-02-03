@@ -6,6 +6,7 @@ namespace MakinaCorpus\CoreBus\Tests\Implementation\Mock;
 
 use MakinaCorpus\CoreBus\EventBus\EventListener;
 
+#[\MakinaCorpus\CoreBus\Attr\EventListener]
 final class MockEventListener implements EventListener
 {
     /**

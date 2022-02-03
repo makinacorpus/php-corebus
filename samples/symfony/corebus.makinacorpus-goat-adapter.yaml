@@ -73,23 +73,3 @@ services:
         public: false
         decorates: corebus.command.handler_locator
         arguments: ['@.inner', '@goat.dispatcher.handler_locator']
-
-    #
-    # Plugs event store on event bus, transparently store all emited events
-    # into the event store.
-    #
-
-    corebus.event_store_info_extractor.attribute:
-        public: false
-        class: MakinaCorpus\CoreBus\Bridge\Goat\EventStore\AttributeEventInfoExtrator
-        arguments: ['@corebus.attributes.loader']
-        tags: ['app.event_info']
-
-    corebus.event_store_info_extractor:
-        public: false
-        class: MakinaCorpus\CoreBus\Bridge\Goat\EventStore\EventInfoExtratorChain
-        arguments: [[]]
-
-    MakinaCorpus\CoreBus\Bridge\Goat\EventStore\EventStoreEventBusDecorator:
-        decorates: corebus.event.bus.internal
-        arguments: ['@.inner', '@goat.event_store', '@corebus.event_store_info_extractor', '@corebus.attributes.loader']

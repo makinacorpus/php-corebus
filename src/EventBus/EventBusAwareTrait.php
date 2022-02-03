@@ -19,6 +19,9 @@ trait EventBusAwareTrait /* implements EventBusAware */
         $this->eventBus = $eventBus;
     }
 
+    /**
+     * Get event bus.
+     */
     protected function getEventBus(): EventBus
     {
         if (!$this->eventBus) {

@@ -7,7 +7,7 @@ namespace MakinaCorpus\CoreBus\Implementation\CommandBus;
 use MakinaCorpus\CoreBus\CommandBus\CommandHandlerLocator;
 use MakinaCorpus\CoreBus\CommandBus\Error\CommandHandlerNotFoundError;
 use MakinaCorpus\CoreBus\Implementation\Type\CallableReferenceList;
-use MakinaCorpus\CoreBus\Implementation\Type\DefaultCallableReferenceList;
+use MakinaCorpus\CoreBus\Implementation\Type\RuntimeCallableReferenceList;
 use Symfony\Component\DependencyInjection\ContainerAwareInterface;
 use Symfony\Component\DependencyInjection\ContainerAwareTrait;
 
@@ -25,7 +25,7 @@ final class ContainerCommandHandlerLocator implements CommandHandlerLocator, Con
         if ($references instanceof CallableReferenceList) {
             $this->referenceList = $references;
         } else if (\is_array($references)) {
-            $this->referenceList = new DefaultCallableReferenceList(null, false);
+            $this->referenceList = new RuntimeCallableReferenceList(false);
             foreach ($references as $id => $className) {
                 $this->referenceList->appendFromClass($className, $id);
             }

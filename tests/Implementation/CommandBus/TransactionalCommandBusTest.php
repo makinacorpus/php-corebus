@@ -4,11 +4,6 @@ declare(strict_types=1);
 
 namespace MakinaCorpus\CoreBus\Tests\Implementation\CommandBus;
 
-use MakinaCorpus\CoreBus\Attr\NoTransaction;
-use MakinaCorpus\CoreBus\Attribute\AttributeList;
-use MakinaCorpus\CoreBus\Attribute\AttributeLoader;
-use MakinaCorpus\CoreBus\Attribute\Loader\DefaultAttributeList;
-use MakinaCorpus\CoreBus\Attribute\Loader\NullAttributeLoader;
 use MakinaCorpus\CoreBus\CommandBus\CommandBus;
 use MakinaCorpus\CoreBus\CommandBus\CommandResponsePromise;
 use MakinaCorpus\CoreBus\CommandBus\Error\CommandHandlerNotFoundError;
@@ -23,6 +18,7 @@ use MakinaCorpus\CoreBus\Implementation\Transaction\TransactionManager;
 use MakinaCorpus\CoreBus\Tests\Implementation\Mock\MockCommandA;
 use MakinaCorpus\CoreBus\Tests\Implementation\Mock\MockCommandB;
 use MakinaCorpus\CoreBus\Tests\Implementation\Mock\MockCommandC;
+use MakinaCorpus\CoreBus\Tests\Implementation\Mock\MockCommandNoTransaction;
 use MakinaCorpus\CoreBus\Tests\Implementation\Mock\MockEventA;
 use MakinaCorpus\CoreBus\Tests\Implementation\Mock\MockEventB;
 use MakinaCorpus\CoreBus\Tests\Implementation\Mock\MockEventBus;
@@ -87,14 +83,12 @@ final class TransactionalCommandBusTest extends TestCase
         $externalEventBus = new MockEventBus();
         $internalEventBus = new MockEventBus();
 
-        $attributeLoader = new NullAttributeLoader();
         $transactionManager = new TestingTransactionManager();
 
         $commandBus = $this->createCommandBus(
             $internalCommandBus,
             $internalEventBus,
             $externalEventBus,
-            $attributeLoader,
             $transactionManager
         );
         $internalCommandBus->setEventBus($commandBus);
@@ -110,27 +104,17 @@ final class TransactionalCommandBusTest extends TestCase
         $externalEventBus = new MockEventBus();
         $internalEventBus = new MockEventBus();
 
-        $attributeLoader = new class () extends NullAttributeLoader
-        {
-            public function loadFromClass(string $className): AttributeList
-            {
-                return new DefaultAttributeList([
-                    new NoTransaction(),
-                ]);
-            }
-        };
         $transactionManager = new TestingTransactionManager();
 
         $commandBus = $this->createCommandBus(
             $internalCommandBus,
             $internalEventBus,
             $externalEventBus,
-            $attributeLoader,
             $transactionManager
         );
         $internalCommandBus->setEventBus($commandBus);
 
-        $commandBus->dispatchCommand(new MockCommandA());
+        $commandBus->dispatchCommand(new MockCommandNoTransaction());
 
         self::expectExceptionMessage('No transaction is set or was done.');
         $transactionManager->getCurrentTransaction();
@@ -142,14 +126,12 @@ final class TransactionalCommandBusTest extends TestCase
         $externalEventBus = new MockEventBus();
         $internalEventBus = new MockEventBus();
 
-        $attributeLoader = new NullAttributeLoader();
         $transactionManager = new TestingTransactionManager();
 
         $commandBus = $this->createCommandBus(
             $internalCommandBus,
             $internalEventBus,
             $externalEventBus,
-            $attributeLoader,
             $transactionManager
         );
         $internalCommandBus->setEventBus($commandBus);
@@ -169,7 +151,6 @@ final class TransactionalCommandBusTest extends TestCase
         CommandBus $commandBus,
         EventBus $internalEventBus,
         EventBus $externalEventBus,
-        ?AttributeLoader $attributeLoader = null,
         ?TransactionManager $transactionManager = null
     ): TransactionalCommandBus{
         return new TransactionalCommandBus(
@@ -177,8 +158,7 @@ final class TransactionalCommandBusTest extends TestCase
             $internalEventBus,
             $externalEventBus,
             new ArrayEventBufferManager(),
-            $transactionManager ?? new TestingTransactionManager(),
-            $attributeLoader ?? new NullAttributeLoader(),
+            $transactionManager ?? new TestingTransactionManager()
         );
     }
 }
@@ -287,6 +267,10 @@ final class TransactionalCommandBusTestCommandBus implements CommandBus
             $this->getEventBus()->notifyEvent(new MockEventC());
 
             return SynchronousCommandResponsePromise::success(new MockResponse($command));
+        }
+
+        if ($command instanceof MockCommandNoTransaction) {
+            return SynchronousCommandResponsePromise::success(null);
         }
 
         throw CommandHandlerNotFoundError::fromCommand($command);

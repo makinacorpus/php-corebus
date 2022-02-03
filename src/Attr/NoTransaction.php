@@ -9,8 +9,6 @@ namespace MakinaCorpus\CoreBus\Attr;
  *
  * Usage:
  *   #[NoTransaction]
- *
- * @Annotation
  */
 #[\Attribute]
 final class NoTransaction extends Command
