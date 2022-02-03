@@ -1,0 +1,14 @@
+#
+# Default sample configuration for corebus services.
+#
+# Attributes loading using PHP 8 attributes.
+#
+services:
+    _defaults:
+        autowire: false
+        autoconfigure: false
+        public: false
+
+    corebus.attributes.loader:
+        class: MakinaCorpus\CoreBus\Attribute\Loader\AttributeAttributeLoader
+        tags: ['corebus.attribute.loader']

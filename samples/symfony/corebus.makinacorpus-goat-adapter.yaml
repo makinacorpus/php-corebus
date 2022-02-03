@@ -1,0 +1,95 @@
+#
+# Default sample configuration for corebus services.
+#
+# Integrates with services from makinacorpus/goat package when plugged
+# with the provided Symfony bundle.
+#
+services:
+    _defaults:
+        autowire: false
+        autoconfigure: false
+        public: false
+
+    #
+    # Create an alias toward goat-query default SQL connection.
+    #
+    # You can override this alias target if your business SQL connection is
+    # not the default one.
+    #
+    goat.runner.corebus:
+        alias: goat.runner.default
+
+    #
+    # Defines SQL transaction manager.
+    #
+    corebus.transaction.manager.goat_query:
+        class: MakinaCorpus\CoreBus\Bridge\Goat\Transaction\GoatQueryTransactionManager
+        arguments: ['@goat.runner.corebus']
+
+    #
+    # Overide default transaction manager to use goat-query one.
+    #
+    corebus.transaction.manager:
+        alias: corebus.transaction.manager.goat_query
+
+    #
+    # Defines a command bus which queues messages into goat message broker.
+    #
+    # Also override the "corebus.command.bus.asynchronous" alias to point to
+    # this component instead, but beware, depending upon file load order, you
+    # might need to reset it into your main services.yaml file.
+    #
+
+    MakinaCorpus\CoreBus\Bridge\Goat\Dispatcher\MessageBrokerCommandBus:
+        arguments: ['@goat.message_broker']
+
+    corebus.command.bus.asynchronous:
+        alias: MakinaCorpus\CoreBus\Bridge\Goat\Dispatcher\MessageBrokerCommandBus
+
+    #
+    # Defines a goat dispatcher implementation that proxifies to our shared
+    # bus service instead.
+    #
+
+    goat.dispatcher:
+        public: false
+        class: MakinaCorpus\CoreBus\Bridge\Goat\Dispatcher\DispatcherCommandBusAdapter
+        arguments: ['@corebus.command.bus.asynchronous', '@corebus.command.bus.synchronous']
+        tags: [{ name: "monolog.logger", channel: "goat_dispatcher" }]
+
+    #
+    # Minor compat fix for legacy versions.
+    #
+
+    goat.domain.dispatcher:
+        alias: goat.dispatcher
+
+    #
+    # Defines a handler locator that also will give you handlers that were
+    # originally written for the goat dispatcher.
+    #
+
+    MakinaCorpus\CoreBus\Bridge\Goat\Dispatcher\HandlerLocaterAdapter:
+        public: false
+        decorates: corebus.command.handler_locator
+        arguments: ['@.inner', '@goat.dispatcher.handler_locator']
+
+    #
+    # Plugs event store on event bus, transparently store all emited events
+    # into the event store.
+    #
+
+    corebus.event_store_info_extractor.attribute:
+        public: false
+        class: MakinaCorpus\CoreBus\Bridge\Goat\EventStore\AttributeEventInfoExtrator
+        arguments: ['@corebus.attributes.loader']
+        tags: ['app.event_info']
+
+    corebus.event_store_info_extractor:
+        public: false
+        class: MakinaCorpus\CoreBus\Bridge\Goat\EventStore\EventInfoExtratorChain
+        arguments: [[]]
+
+    MakinaCorpus\CoreBus\Bridge\Goat\EventStore\EventStoreEventBusDecorator:
+        decorates: corebus.event.bus.internal
+        arguments: ['@.inner', '@goat.event_store', '@corebus.event_store_info_extractor', '@corebus.attributes.loader']

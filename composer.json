@@ -1,0 +1,42 @@
+{
+    "name": "makinacorpus/corebus",
+    "description": "Command and event buses interface and logic.",
+    "type": "library",
+    "license": "GPL-2.0-or-later",
+    "authors": [
+        {
+            "name": "Makina Corpus",
+            "homepage": "https://makina-corpus.com/"
+        }
+    ],
+    "minimum-stability": "stable",
+    "prefer-stable": true,
+    "require": {
+        "php": ">= 7.4",
+        "psr/log": ">= 1.0"
+    },
+    "require-dev": {
+        "friendsofphp/php-cs-fixer": "^2.16",
+        "makinacorpus/goat-query": "^2.1.1",
+        "symfony/config": "^5.0",
+        "symfony/console": "^5.0",
+        "symfony/dependency-injection": "^5.0",
+        "symfony/framework-bundle": "^5.0",
+        "symfony/http-kernel": "^5.0",
+        "symfony/yaml": "^5.0",
+        "phpunit/phpunit": "^9.2",
+        "doctrine/annotations": "^1.12",
+        "symfony/serializer": "^5.3",
+        "symfony/property-access": "^5.3"
+    },
+    "autoload": {
+        "psr-4": {
+            "MakinaCorpus\\CoreBus\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+             "MakinaCorpus\\CoreBus\\Tests\\": "tests/"
+        }
+    }
+}

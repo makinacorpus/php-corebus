@@ -1,0 +1,13 @@
+#
+# Integration with symfony/serializer component.
+#
+services:
+    _defaults:
+        autowire: true
+        autoconfigure: true
+        public: false
+
+    corebus.symfony.serializer.multi_command:
+        class: MakinaCorpus\CoreBus\Bridge\Symfony\Serializer\Normalizer\MultiCommandNormalizer
+        tags: ['serializer.normalizer']
+        calls: [[setSerializer, ['@serializer']]]

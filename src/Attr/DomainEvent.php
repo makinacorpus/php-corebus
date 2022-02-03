@@ -1,0 +1,15 @@
+<?php
+
+declare(strict_types=1);
+
+namespace MakinaCorpus\CoreBus\Attr;
+
+use MakinaCorpus\CoreBus\Attribute\Attribute;
+
+/**
+ * Attribute for domain event.
+ */
+#[\Attribute]
+class DomainEvent implements Attribute
+{
+}

@@ -1,0 +1,111 @@
+#
+# Default sample configuration for corebus services.
+#
+# Usually, you probably will not have to make much modification if you with
+# to keep a purely synchronous application.
+#
+# This file must be loaded before other defined in this same directory.
+#
+services:
+    _defaults:
+        autowire: true
+        autoconfigure: true
+        public: false
+
+    #
+    # Transactions manager
+    #
+
+    corebus.transaction.manager.null:
+        class: MakinaCorpus\CoreBus\Implementation\Transaction\NullTransactionManager
+
+    corebus.transaction.manager:
+        alias: corebus.transaction.manager.null
+
+    corebus.event_buffer.manager.array:
+        class: MakinaCorpus\CoreBus\Implementation\EventBus\ArrayEventBufferManager
+
+    corebus.event_buffer.manager:
+        alias: corebus.event_buffer.manager.array
+
+    #
+    # Attribute loader.
+    #
+
+    corebus.attributes.loader.chain:
+        class: MakinaCorpus\CoreBus\Attribute\Loader\ChainAttributeLoader
+        arguments: [[]]
+
+    corebus.attributes.loader:
+        alias: corebus.attributes.loader.chain
+
+    MakinaCorpus\CoreBus\Attribute\AttributeLoader:
+        alias: corebus.attributes.loader.chain
+
+    #
+    # Buses and handler locators
+    #
+
+    corebus.event.listener.locator.container:
+        class: MakinaCorpus\CoreBus\Implementation\EventBus\ContainerEventListenerLocator
+        calls: [[setContainer, ["@service_container"]]]
+        arguments: [[]]
+
+    corebus.event.listener.locator:
+        alias: corebus.event.listener.locator.container
+
+    corebus.event.bus.null:
+        class: MakinaCorpus\CoreBus\Implementation\EventBus\NullEventBus
+
+    corebus.event.bus.memory:
+        class: MakinaCorpus\CoreBus\Implementation\EventBus\MemoryEventBus
+        arguments:
+            - "@corebus.event.listener.locator"
+
+    corebus.event.bus.internal:
+        alias: corebus.event.bus.memory
+
+    corebus.event.bus.external:
+        alias: corebus.event.bus.null
+
+    corebus.command.handler.locator.container:
+        class: MakinaCorpus\CoreBus\Implementation\CommandBus\ContainerCommandHandlerLocator
+        calls: [[setContainer, ["@service_container"]]]
+        arguments: [[]]
+
+    corebus.command.handler_locator:
+        alias: corebus.command.handler.locator.container
+
+    corebus.command.bus.memory:
+        class: MakinaCorpus\CoreBus\Implementation\CommandBus\MemoryCommandBus
+        arguments:
+            - "@corebus.command.handler_locator"
+
+    corebus.bus.transactional:
+        class: MakinaCorpus\CoreBus\Implementation\CommandBus\TransactionalCommandBus
+        arguments:
+            - "@corebus.command.bus.memory"
+            - "@corebus.event.bus.internal"
+            - "@corebus.event.bus.external"
+            - "@corebus.event_buffer.manager"
+            - "@corebus.transaction.manager"
+            - "@corebus.attributes.loader"
+
+    corebus.command.bus.asynchronous:
+        alias: corebus.bus.transactional
+
+    corebus.command.bus.synchronous:
+        alias: corebus.bus.transactional
+
+    #
+    # Aliases to use and Symfony autowiring.
+    #
+
+    MakinaCorpus\CoreBus\EventBus\EventBus:
+        alias: corebus.bus.transactional
+
+    MakinaCorpus\CoreBus\CommandBus\CommandBus:
+        alias: corebus.command.bus.asynchronous
+
+    MakinaCorpus\CoreBus\CommandBus\SynchronousCommandBus:
+        alias: corebus.command.bus.synchronous

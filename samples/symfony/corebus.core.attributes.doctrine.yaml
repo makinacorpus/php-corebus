@@ -1,0 +1,15 @@
+#
+# Default sample configuration for corebus services.
+#
+# Attributes loading using doctrine annotations.
+#
+services:
+    _defaults:
+        autowire: false
+        autoconfigure: false
+        public: false
+
+    corebus.attributes.loader.annotation:
+        class: MakinaCorpus\CoreBus\Attribute\Loader\AnnotationAttributeLoader
+        arguments: ['@annotations.reader']
+        tags: ['corebus.attribute.loader']
