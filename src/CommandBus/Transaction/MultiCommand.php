@@ -37,7 +37,7 @@ final class MultiCommand implements \Traversable, \IteratorAggregate, \Countable
     /**
      * {@inheritdoc}
      */
-    public function getIterator(): iterable
+    public function getIterator(): \Traversable
     {
         return (fn () => yield from $this->commands)();
     }

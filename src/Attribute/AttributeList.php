@@ -24,7 +24,7 @@ final class AttributeList implements \IteratorAggregate
     /**
      * {@inheritdoc}
      */
-    public function getIterator()
+    public function getIterator(): \Traversable
     {
         foreach ($this->attributes as $name => $attributes) {
             yield from $attributes;

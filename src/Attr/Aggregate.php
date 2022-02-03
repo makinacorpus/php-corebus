@@ -22,10 +22,10 @@ final class Aggregate extends DomainEvent
     private string $aggregateIdPropertyName;
     private ?string $aggregateType = null;
 
-    public function __construct(string $aggregateIdPropertyName, ?string $aggregateType = null)
+    public function __construct(string $property, ?string $type = null)
     {
-        $this->aggregateIdPropertyName = $aggregateIdPropertyName;
-        $this->aggregateType = $aggregateType;
+        $this->aggregateIdPropertyName = $property;
+        $this->aggregateType = $type;
     }
 
     public function getAggregateIdPropertyName(): string
