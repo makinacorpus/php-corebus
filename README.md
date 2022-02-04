@@ -91,76 +91,54 @@ configuration for a concrete example.
 
 ## Using Symfony
 
-As of today, this package does not provide Symfony extension, bundle or
-auto-configuration, but rather simple example configuration files for your
-services and a couple of compiler pass to apply for automatic command handler
-and event listener registration.
-
-Please read carefuly one of the files in `samples/symfony/services-*.yaml`,
-copy paste its contents into your own `config/services.yaml` and adapt to your
-needs.
-
-Then add into your `Kernel.php` file:
+Simply enable the bundle in your `config/bundles.php` file:
 
 ```php
+return [
+    // ... your other bunbles.
+    MakinaCorpus\CoreBus\Bridge\Symfony\CoreBusBundle::class => ['all' => true],
+];
 
-use MakinaCorpus\CoreBus\Bridge\Symfony\DependencyInjection\Compiler\RegisterCommandHandlerPass;
-use MakinaCorpus\CoreBus\Bridge\Symfony\DependencyInjection\Compiler\RegisterEventInfoExtractorPass;
-use MakinaCorpus\CoreBus\Bridge\Symfony\DependencyInjection\Compiler\RegisterEventListenerPass;
-use MakinaCorpus\CoreBus\CommandBus\CommandBus;
-use MakinaCorpus\CoreBus\CommandBus\CommandBusAware;
-use MakinaCorpus\CoreBus\EventBus\EventBus;
-use MakinaCorpus\CoreBus\EventBus\EventBusAware;
-// ... Your other use statements.
-
-class Kernel extends BaseKernel
-{
-    // ... Your kernel code.
-
-    /**
-     * {@inheritdoc}
-     */
-    protected function build(ContainerBuilder $container)
-    {
-        $container
-            ->registerForAutoconfiguration(CommandHandler::class)
-            ->addTag('app.handler')
-        ;
-
-        $container
-            ->registerForAutoconfiguration(EventListener::class)
-            ->addTag('app.handler')
-        ;
-
-        $container
-            ->registerForAutoconfiguration(EventBusAware::class)
-            ->addMethodCall('setEventBus', [new Reference(EventBus::class)])
-        ;
-
-        $container
-            ->registerForAutoconfiguration(CommandBusAware::class)
-            ->addMethodCall('setCommandBus', [new Reference(CommandBus::class)])
-        ;
-
-        $container->addCompilerPass(new RegisterCommandHandlerPass());
-        $container->addCompilerPass(new RegisterEventListenerPass());
-        $container->addCompilerPass(new RegisterEventInfoExtractorPass());
-    }
 ```
 
-This way, this bundle remains very flexible regarding Symfony version, and
-leave all complex configuration to you, allowing you much more flexibility in
-your application design.
+You may add an additional `config/packages/corebus.yaml` file, althought
+configuration options remain very limited at this time:
+
+```yaml
+corebus:
+    #
+    # Default adapter.
+    #
+    # Since only the "goat" one is implemented, this is the default value
+    # so in fact, you probably should not write this.
+    #
+    adapter: goat
+
+    #
+    # Adapter options.
+    #
+    # All values here are arbitrary and will depend from the adapter.
+    # As of today, the only existing option is "event_store" (boolean)
+    # for the "goat" adapter, which plugs or unplugs the event store
+    # onto the dispatcher.
+    #
+    adapter_options:
+        event_store: true
+```
 
 # Usage
 
 ## Commands and events
 
-Write a simple command:
+Commands are plain PHP object and don't require any dependency.
+
+Just write a Data Transport Object:
 
 ```php
 
 declare(strict_types=1);
+
+namespace App\Domain\SomeBusiness\Command;
 
 final class SayHelloCommand
 {
@@ -173,11 +151,13 @@ final class SayHelloCommand
 }
 ```
 
-Write some events:
+Same goes with events, so just write:
 
 ```php
 
 declare(strict_types=1);
+
+namespace App\Domain\SomeBusiness\Event;
 
 final class HelloWasSaidEvent
 {
@@ -199,9 +179,11 @@ Tie a single command handler:
 
 declare(strict_types=1);
 
+namespace App\Domain\SomeBusiness\Handler;
+
 use MakinaCorpus\CoreBus\CommandBus\AbstractCommandHandler;
 
-final class SayHello extends AbstractCommandHandler
+final class SayHelloHandler extends AbstractCommandHandler
 {
     /*
      * Method name is yours, you may have more than one handler in the
@@ -217,6 +199,17 @@ final class SayHello extends AbstractCommandHandler
 }
 ```
 
+Please note that using the `AbstractCommandHandler` base class is purely
+optional, it's simply an helper for being able to use the event dispatcher
+and command bus from within your handlers.
+
+Alternatively, if you don't require any of those, you may just:
+
+ - Either set the `#[MakinaCorpus\CoreBus\Attr\CommandHandler]` attribute on
+   the class, case in which all of its methods will be considered as handlers.
+ - Either set the `#[MakinaCorpus\CoreBus\Attr\CommandHandler]` attribute on
+   each method that is an handler.
+
 You may also write as many event listeners as you wish, then even
 may emit events themselves:
 
@@ -224,9 +217,11 @@ may emit events themselves:
 
 declare(strict_types=1);
 
+namespace App\Domain\SomeBusiness\Listener;
+
 use MakinaCorpus\CoreBus\EventBus\EventListener;
 
-final class SayHello implements EventListener
+final class SayHelloListener implements EventListener
 {
     /*
      * Method name is yours, you may have more than one handler in the
@@ -240,8 +235,55 @@ final class SayHello implements EventListener
 }
 ```
 
-If you correctly plug the Symfony container machinery, glue will be
-completely transparent as long as you implement the correct interfaces.
+Same goes for event listeners, the base class is just here to help
+but is not required, you may just:
+
+ - Either set the `#[MakinaCorpus\CoreBus\Attr\EventListener]` attribute on
+   the class, case in which all of its methods will be considered as listeners.
+ - Either set the `#[MakinaCorpus\CoreBus\Attr\EventListener]` attribute on
+   each method that is an listener.
+
+This requires that your services are known by the container. You have three
+different options for this.
+
+First one, which is Symfony's default, autoconfigure all your services:
+
+```yaml
+services:
+    _defaults:
+        autowire: true
+        autoconfigure: true
+        public: false
+
+    everything:
+        namespace: App\Domain\
+        resource: '../src/Domain/*'
+```
+
+Or if you wish to play it subtle:
+
+```yaml
+services:
+    _defaults:
+        autowire: true
+        autoconfigure: true
+        public: false
+
+    handler_listener:
+        namespace: App\Domain\
+        resource: '../src/Domain/*/{Handler,Listener}'
+```
+
+Or if you want to do use the old ways:
+
+```yaml
+services:
+    App\Domain\SomeBusiness\Handler\SayHelloHandler: ~
+    App\Domain\SomeBusiness\Listener\SayHelloListener: ~
+```
+
+In all cases, you don't require any tags or such as long as you either
+extended the base class, or used the attributes.
 
 ## Register handlers using attributes
 
@@ -252,10 +294,12 @@ Tie a single command handler:
 
 declare(strict_types=1);
 
+namespace App\Domain\SomeBusiness\Handler;
+
 use MakinaCorpus\CoreBus\EventBus\EventBusAware;
 use MakinaCorpus\CoreBus\EventBus\EventBusAwareTrait;
 
-final class SayHello EventBusAware
+final class SayHelloHandler implements EventBusAware
 {
     use EventBusAwareTrait;
 
@@ -281,6 +325,8 @@ may emit events themselves:
 
 declare(strict_types=1);
 
+namespace App\Domain\SomeBusiness\Listener;
+
 final class SayHello
 {
     /*
@@ -297,7 +343,7 @@ final class SayHello
 ```
 
 If you correctly plug the Symfony container machinery, glue will be
-completely transparent as long as you implement the correct interfaces.
+completely transparent.
 
 # Using attributes
 
