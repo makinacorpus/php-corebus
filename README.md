@@ -1,7 +1,26 @@
-# CoreBus - Command and event buses interface and logic
+# CoreBus - Command and Event buses interfaces
 
-This package serves the purpose of sharing interfaces and internal logic
-for command-handler-event architectured projects.
+Discrete command bus and domain event dispatcher interfaces for message based
+architectured projects.
+
+Discrete means that your domain code will not be tainted by this component
+code dependency, aside attributes used for targeting command handler methods
+and event listener methods. Your domain business code remains dependency-free.
+
+What does this package provide:
+
+ - Internal synchronous event dispatcher.
+ - Event listener locator.
+ - Internal synchronous command bus dispatcher implementation.
+ - Command process transaction handling.
+ - Command handler locator.
+ - Attributes for aspect-driven domain code configuration.
+ - Event listener and command handler efficient caching mechanism.
+ - Simple command bus interface.
+
+What it does WILL provide (but is not there yet):
+
+ - Message broker (asynchronous command bus) implementation.
 
 # Design
 
