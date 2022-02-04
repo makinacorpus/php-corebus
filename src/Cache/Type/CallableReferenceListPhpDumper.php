@@ -10,40 +10,45 @@ use Symfony\Component\Filesystem\Exception\IOException;
 
 class CallableReferenceListPhpDumper
 {
+    const DUMPED_NAMESPACE = 'MakinaCorpus\\CoreBus\\Cache\\Type\\Generated';
+    private string $target;
+    private string $directory;
     private string $filename;
     private bool $allowMultiple;
     private bool $withParents;
     private array $references = [];
 
-    public function __construct(string $filename, bool $allowMultiple = false, bool $withParents = false)
-    {
+    public function __construct(
+        string $target,
+        bool $allowMultiple = false,
+        bool $withParents = false,
+        ?string $directory = null
+    ) {
+        $this->directory = $directory ?? \sys_get_temp_dir() . '/corebus_cache';
+        $this->filename = \rtrim($this->directory, '/') . '/corebus_handler_callback_' . $target . '.php';
+        $this->target = $target;
         $this->allowMultiple = $allowMultiple;
-        $this->filename = $filename;
         $this->withParents = $withParents;
     }
 
     /**
      * Compute absolute filename.
      */
-    public static function getFilename(string $kernelCacheDirectory, string $tag): string
+    public function getFilename(): string
     {
-        return $kernelCacheDirectory . '/corebus_handler_callback_' . $tag . '.php';
-    }
-
-    /**
-     * Compute and get dumped class namespace.
-     */
-    public static function getDumpedClassNamespace(): string
-    {
-        return 'MakinaCorpus\CoreBus\Cache\Type\Generated';
+        return $this->filename;
     }
 
     /**
      * Compute and get dumped local class name.
      */
-    public static function getDumpedClassName(string $tag): string
+    public function getDumpedClassName(bool $fullyQualified = true): string
     {
-        return \ucfirst($tag) . 'DumpedCallableReferenceList';
+        $localClassName = \str_replace(' ', '', \ucwords(\str_replace('_', ' ', $this->target))) . 'DumpedCallableReferenceList';
+        if ($fullyQualified) {
+            return '\\' . self::DUMPED_NAMESPACE . '\\' . $localClassName;
+        }
+        return $localClassName;
     }
 
     /**
@@ -51,7 +56,7 @@ class CallableReferenceListPhpDumper
      */
     public function appendFromClass(string $handlerClassName, ?string $handlerServiceId = null): void
     {
-        $classParser = new ClassParser();
+        $classParser = new ClassParser($this->target);
 
         foreach ($classParser->lookup($handlerClassName) as $reference) {
             $this->append($reference);
@@ -81,7 +86,7 @@ class CallableReferenceListPhpDumper
     /**
      * Dump file.
      */
-    public function dump(string $dumpedClassName): void
+    public function dump(): void
     {
         $this->delete();
 
@@ -89,12 +94,15 @@ class CallableReferenceListPhpDumper
             throw new IOException(\sprintf("Could not open file for writing: %s", $this->filename));
         }
 
+        $dumpedNamespace = self::DUMPED_NAMESPACE;
+        $dumpedClassName = $this->getDumpedClassName(false);
+
         \fwrite($handle, <<<PHP
 <?php
 
 declare(strict_types=1);
 
-namespace MakinaCorpus\CoreBus\Cache\Type\Generated;
+namespace {$dumpedNamespace};
 
 use MakinaCorpus\CoreBus\Implementation\Type\CallableReference;
 use MakinaCorpus\CoreBus\Implementation\Type\CallableReferenceList;

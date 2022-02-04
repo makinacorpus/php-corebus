@@ -17,6 +17,16 @@ use MakinaCorpus\CoreBus\Attr\AbstractHandlerAttribute;
  */
 class ClassParser
 {
+    const TARGET_COMMAND_HANDLER = 'command_handler';
+    const TARGET_EVENT_LISTENER = 'event_listener';
+
+    private ?string $target = null;
+
+    public function __construct(?string $target = null)
+    {
+        $this->target = $target;
+    }
+
     /**
      * Proceed to class lookup, attempt to find handlers.
      *
@@ -92,14 +102,28 @@ class ClassParser
     /** @return list<CommandHandler|EventListener> */
     private function hasAttribute(/* \ReflectionClass|\ReflectionMethod */ $ref): bool
     {
-        return $ref->getAttributes(CommandHandler::class) || $ref->getAttributes(EventListener::class);
+        switch ($this->target) {
+            case self::TARGET_COMMAND_HANDLER:
+                return (bool) $ref->getAttributes(CommandHandler::class);
+            case self::TARGET_EVENT_LISTENER:
+                return (bool) $ref->getAttributes(EventListener::class);
+            default:
+                return $ref->getAttributes(CommandHandler::class) || $ref->getAttributes(EventListener::class);
+        }
     }
 
     /** @return list<CommandHandler|EventListener> */
     private function findAttributes(/* \ReflectionClass|\ReflectionMethod */ $ref): iterable
     {
-        yield from $ref->getAttributes(CommandHandler::class);
-        yield from $ref->getAttributes(EventListener::class);
+        switch ($this->target) {
+            case self::TARGET_COMMAND_HANDLER:
+                yield from $ref->getAttributes(CommandHandler::class);
+            case self::TARGET_EVENT_LISTENER:
+                yield from $ref->getAttributes(EventListener::class);
+            default:
+                yield from $ref->getAttributes(CommandHandler::class);
+                yield from $ref->getAttributes(EventListener::class);
+        }
     }
 
     /**

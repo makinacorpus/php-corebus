@@ -11,7 +11,7 @@ use MakinaCorpus\CoreBus\Attribute\Attribute;
  */
 abstract class AbstractHandlerAttribute implements Attribute
 {
-    private ?string $taget = null;
+    private ?string $target = null;
 
     public function __construct(?string $target = null)
     {

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace MakinaCorpus\CoreBus\Bridge\Symfony\DependencyInjection\Compiler;
 
 use MakinaCorpus\CoreBus\Cache\Type\CallableReferenceListPhpDumper;
+use MakinaCorpus\CoreBus\Implementation\Type\ClassParser;
 use MakinaCorpus\CoreBus\Implementation\Type\NullCallableReferenceList;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Definition;
@@ -23,10 +24,12 @@ final class RegisterCommandHandlerPass implements CompilerPassInterface
             return;
         }
 
-        $dumpedClassName = CallableReferenceListPhpDumper::getDumpedClassName('command');
-        $dumpedFileName = CallableReferenceListPhpDumper::getFilename($container->getParameter('kernel.cache_dir'), 'command');
-
-        $dumper = new CallableReferenceListPhpDumper($dumpedFileName, false, false);
+        $dumper = new CallableReferenceListPhpDumper(
+            ClassParser::TARGET_COMMAND_HANDLER,
+            false,
+            false,
+            $container->getParameter('kernel.cache_dir')
+        );
 
         foreach ($container->findTaggedServiceIds('app.handler', true) as $id => $attributes) {
             $definition = $container->getDefinition($id);
@@ -49,12 +52,12 @@ final class RegisterCommandHandlerPass implements CompilerPassInterface
             $definition->setClass($serviceClassName);
             $container->setDefinition($serviceClassName, $definition);
         } else {
-            $dumper->dump($dumpedClassName);
+            $dumper->dump();
 
-            $serviceClassName = CallableReferenceListPhpDumper::getDumpedClassNamespace() . '\\' . $dumpedClassName;
+            $serviceClassName = $dumper->getDumpedClassName(true);
             $definition = new Definition();
             $definition->setClass($serviceClassName);
-            $definition->setFile($dumpedFileName);
+            $definition->setFile($dumper->getFilename());
             $container->setDefinition($serviceClassName, $definition);
         }
 
