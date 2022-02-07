@@ -4,7 +4,7 @@ Discrete command bus and domain event dispatcher interfaces for message based
 architectured projects.
 
 Discrete means that your domain code will not be tainted by this component
-code dependency, aside attributes used for targeting command handler methods
+hard-dependency, aside attributes used for targeting command handler methods
 and event listener methods. Your domain business code remains dependency-free.
 
 What does this package provide:
@@ -20,7 +20,7 @@ What does this package provide:
 
 What it does WILL provide (but is not there yet):
 
- - Message broker (asynchronous command bus) implementation.
+ - Message broker (asynchronous command bus) implementation using postgresql.
 
 # Design
 
@@ -38,7 +38,7 @@ Expected runtime flow is the following:
 
 During the whole command processing, the database transaction will be
 isolated if the backend permits it. Commit is all or nothing, including
-events being emitted during the process.
+events being emitted and listener execution during the process.
 
 ## Transaction and event buffer
 
@@ -74,9 +74,9 @@ Two implementations are provided:
 
  - In-memory bus, along with null transaction handling (no transaction at all)
    ideal for prototyping and unit-testing.
- - PostgreSQL bus implementation using `makinacorpus/goat-query`, transaction
-   handling using the same database connection, reliable and guaranteing data
-   consistency.
+ - PostgreSQL bus implementation using `makinacorpus/goat` for message broker,
+   and `makinacorpus/goat-query` for transaction handling using the same
+   database connection, reliable and guaranteing data consistency.
 
 Everything is hidden behind interfaces and different implementations are easy
 to implement. Your projects are not required to choose either one of those
@@ -142,7 +142,7 @@ namespace App\Domain\SomeBusiness\Command;
 
 final class SayHelloCommand
 {
-    public string $name;
+    public readonly string $name;
 
     public function __construct(string $name)
     {
@@ -161,7 +161,7 @@ namespace App\Domain\SomeBusiness\Event;
 
 final class HelloWasSaidEvent
 {
-    public string $name;
+    public readonly string $name;
 
     public function __construct(string $name)
     {
@@ -171,7 +171,6 @@ final class HelloWasSaidEvent
 ```
 
 ## Register handlers using base class
-
 
 Tie a single command handler:
 
@@ -282,8 +281,8 @@ services:
     App\Domain\SomeBusiness\Listener\SayHelloListener: ~
 ```
 
-In all cases, you don't require any tags or such as long as you either
-extended the base class, or used the attributes.
+In all cases, you don't require any tags or any other metadata as long as you
+either extend the base class, or use the attributes.
 
 ## Register handlers using attributes
 
@@ -362,6 +361,7 @@ event behaviour without tainting the domain code.
  - `#[MakinaCorpus\CoreBus\Attr\Retry(?int)]` allows the command to
    be retried in case an error happen. First parameter is the number of retries
    allowed, default is `3`.
+   Warning, this is not implemented yet, and is an empty shell.
 
 ## Domain event attributes.
 
@@ -396,14 +396,10 @@ you will use. You may replace or decorate any of them.
 
 # Future work
 
-## Add a Handler attribute
+## Provide a bare PostgreSQL message broker implementation
 
-`MakinaCorpus\CoreBus\Attr\Handler` attribute will allow to explicitely
-declare a handler method, arguments will be the command object class or command
-logical name (eg. `my_app.do_this` for example).
-
-Using a logical name will allow handlers to function on non-existing classes
-with a generic command class, or any type of data.
+Because when you have simple needs, you need simple implementations, and the
+current `makinacorpus/goat` implementation is too complex.
 
 ## Add a GenericCommand class
 
