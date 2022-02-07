@@ -1,6 +1,7 @@
 {
     "name": "makinacorpus/corebus",
     "description": "Command and event buses interface and logic.",
+    "homepage": "http://github.com/makinacorpus/php-corebus",
     "type": "library",
     "license": "GPL-2.0-or-later",
     "authors": [
