@@ -51,10 +51,12 @@ services:
     # bus service instead.
     #
 
-    goat.dispatcher:
+    corebus.goat.dispatcher.decorator:
         public: false
         class: MakinaCorpus\CoreBus\Bridge\Goat\Dispatcher\DispatcherCommandBusAdapter
-        arguments: ['@corebus.command.bus.asynchronous', '@corebus.command.bus.synchronous']
+        decorates: goat.dispatcher
+        decoration_priority: -1000
+        arguments: ['@.inner', '@corebus.command.bus.asynchronous', '@corebus.command.bus.synchronous']
         tags: [{ name: "monolog.logger", channel: "goat_dispatcher" }]
 
     #
