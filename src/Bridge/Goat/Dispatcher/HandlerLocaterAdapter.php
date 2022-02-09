@@ -5,10 +5,10 @@ declare (strict_types=1);
 namespace MakinaCorpus\CoreBus\Bridge\Goat\Dispatcher;
 
 use Goat\Dispatcher\HandlerLocator;
-use Goat\Dispatcher\MessageEnvelope;
 use Goat\Dispatcher\Error\HandlerNotFoundError;
 use MakinaCorpus\CoreBus\CommandBus\CommandHandlerLocator;
 use MakinaCorpus\CoreBus\CommandBus\Error\CommandHandlerNotFoundError;
+use MakinaCorpus\Message\Envelope;
 
 final class HandlerLocaterAdapter implements CommandHandlerLocator
 {
@@ -31,7 +31,7 @@ final class HandlerLocaterAdapter implements CommandHandlerLocator
                 // This happens because goat.dispatcher may have one to many
                 // decorators. In an ideal situation, we should not have any
                 // since we implemented everything on our side.
-                if ($message instanceof MessageEnvelope) {
+                if ($message instanceof Envelope) {
                     return $this->goatHandlerLocator->find($message->getMessage());
                 }
 

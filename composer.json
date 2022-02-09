@@ -18,16 +18,18 @@
     },
     "require-dev": {
         "friendsofphp/php-cs-fixer": "^2.16",
-        "makinacorpus/goat-query": "^2.1.1",
+        "makinacorpus/event-store": "^1.0.3",
+        "makinacorpus/goat": "^5.0.0-alpha4",
+        "makinacorpus/goat-query": "^3.0 || ^4.0",
+        "phpunit/phpunit": "^9.2",
         "symfony/config": "^5.4 || ^6.0",
         "symfony/console": "^5.4 || ^6.0",
         "symfony/dependency-injection": "^5.4 || ^6.0",
         "symfony/framework-bundle": "^5.4 || ^6.0",
         "symfony/http-kernel": "^5.4 || ^6.0",
-        "symfony/yaml": "^5.4 || ^6.0",
-        "phpunit/phpunit": "^9.2",
+        "symfony/property-access": "^5.4 || ^6.0",
         "symfony/serializer": "^5.4 || ^6.0",
-        "symfony/property-access": "^5.4 || ^6.0"
+        "symfony/yaml": "^5.4 || ^6.0"
     },
     "autoload": {
         "psr-4": {
