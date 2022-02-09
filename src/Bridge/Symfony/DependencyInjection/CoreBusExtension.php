@@ -34,7 +34,7 @@ final class CoreBusExtension extends Extension
 
                 // @todo "true" here is a very wrong default.
                 if ($config['adapter_options']['event_store'] ?? true) {
-                    $loader->load('corebus.makinacorpus-goat-adapter-eventstore.yaml');
+                    $loader->load('corebus.makinacorpus-eventstore-adapter.yaml');
                 }
                 break;
 

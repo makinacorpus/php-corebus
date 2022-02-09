@@ -1,0 +1,30 @@
+#
+# Default sample configuration for corebus services.
+#
+# Integrates with services from makinacorpus/goat package when plugged
+# with the provided Symfony bundle.
+#
+services:
+    _defaults:
+        autowire: false
+        autoconfigure: false
+        public: false
+
+    #
+    # Plugs event store on event bus, transparently store all emited events
+    # into the event store.
+    #
+
+    corebus.event_store_info_extractor.attribute:
+        public: false
+        class: MakinaCorpus\CoreBus\Bridge\EventStore\AttributeEventInfoExtrator
+        tags: ['app.event_info']
+
+    corebus.event_store_info_extractor:
+        public: false
+        class: MakinaCorpus\CoreBus\Bridge\EventStore\EventInfoExtratorChain
+        arguments: [[]]
+
+    MakinaCorpus\CoreBus\Bridge\EventStore\EventStoreEventBusDecorator:
+        decorates: corebus.event.bus.internal
+        arguments: ['@.inner', '@event_store.event_store', '@corebus.event_store_info_extractor']

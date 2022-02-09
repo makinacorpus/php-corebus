@@ -2,12 +2,12 @@
 
 declare (strict_types=1);
 
-namespace MakinaCorpus\CoreBus\Bridge\Goat\EventStore;
+namespace MakinaCorpus\CoreBus\Bridge\EventStore;
 
-use Goat\EventStore\EventStore;
 use MakinaCorpus\CoreBus\Attr\NoStore;
 use MakinaCorpus\CoreBus\Attribute\AttributeLoader;
 use MakinaCorpus\CoreBus\EventBus\EventBus;
+use MakinaCorpus\EventStore\EventStore;
 
 /**
  * Stoque les événements qui passent par lui dans l'event store.

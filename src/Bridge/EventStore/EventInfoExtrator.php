@@ -2,7 +2,7 @@
 
 declare (strict_types=1);
 
-namespace MakinaCorpus\CoreBus\Bridge\Goat\EventStore;
+namespace MakinaCorpus\CoreBus\Bridge\EventStore;
 
 /**
  * We need to be able to extract a basic set of information for the event store

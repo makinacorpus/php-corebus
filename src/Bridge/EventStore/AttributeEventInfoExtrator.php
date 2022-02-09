@@ -2,7 +2,7 @@
 
 declare (strict_types=1);
 
-namespace MakinaCorpus\CoreBus\Bridge\Goat\EventStore;
+namespace MakinaCorpus\CoreBus\Bridge\EventStore;
 
 use MakinaCorpus\CoreBus\Attr\Aggregate;
 use MakinaCorpus\CoreBus\Attribute\AttributeLoader;

@@ -2,10 +2,10 @@
 
 declare (strict_types=1);
 
-namespace MakinaCorpus\CoreBus\Bridge\Goat\EventStore;
+namespace MakinaCorpus\CoreBus\Bridge\EventStore;
 
+use MakinaCorpus\Message\Property;
 use Ramsey\Uuid\UuidInterface;
-use Goat\EventStore\Property;
 
 final class EventInfo
 {
