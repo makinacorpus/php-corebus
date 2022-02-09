@@ -27,4 +27,4 @@ services:
 
     MakinaCorpus\CoreBus\Bridge\Goat\EventStore\EventStoreEventBusDecorator:
         decorates: corebus.event.bus.internal
-        arguments: ['@.inner', '@goat.event_store', '@corebus.event_store_info_extractor']
+        arguments: ['@.inner', '@event_store.event_store', '@corebus.event_store_info_extractor']
