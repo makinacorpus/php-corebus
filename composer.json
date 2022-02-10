@@ -18,7 +18,7 @@
     },
     "require-dev": {
         "friendsofphp/php-cs-fixer": "^2.16",
-        "makinacorpus/event-store": "^1.0.3",
+        "makinacorpus/event-store": "^1.0.4",
         "makinacorpus/goat": "^5.0.0-alpha4",
         "makinacorpus/goat-query": "^3.0 || ^4.0",
         "phpunit/phpunit": "^9.2",
