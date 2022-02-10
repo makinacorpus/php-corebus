@@ -8,6 +8,7 @@ use MakinaCorpus\CoreBus\Attr\NoStore;
 use MakinaCorpus\CoreBus\Attribute\AttributeLoader;
 use MakinaCorpus\CoreBus\EventBus\EventBus;
 use MakinaCorpus\EventStore\EventStore;
+use MakinaCorpus\EventStore\Projector\Runtime\RuntimePlayer;
 
 /**
  * Stoque les événements qui passent par lui dans l'event store.
@@ -33,15 +34,18 @@ final class EventStoreEventBusDecorator implements EventBus
     private EventBus $decorated;
     private EventStore $eventStore;
     private EventInfoExtrator $eventInfoExtractor;
+    private ?RuntimePlayer $runtimePlayer = null;
 
     public function __construct(
         EventBus $decorated,
         EventStore $eventStore,
-        EventInfoExtrator $eventInfoExtractor
+        EventInfoExtrator $eventInfoExtractor,
+        ?RuntimePlayer $runtimePlayer = null
     ) {
         $this->decorated = $decorated;
         $this->eventInfoExtractor = $eventInfoExtractor;
         $this->eventStore = $eventStore;
+        $this->runtimePlayer = $runtimePlayer;
     }
 
     /**
@@ -56,17 +60,23 @@ final class EventStoreEventBusDecorator implements EventBus
             return;
         }
 
-        $this
+        $storedEvent = $this
             ->eventStore
             ->append($event)
             ->aggregate(
                 $eventInfo->getAggregateType(),
                 $eventInfo->getAggregateId()
             )
-            ->properties($eventInfo->getProperties())
+            ->properties(
+                $eventInfo->getProperties()
+            )
             ->execute()
         ;
 
         $this->decorated->notifyEvent($event);
+
+        if ($this->runtimePlayer) {
+            $this->runtimePlayer->dispatch($storedEvent);
+        }
     }
 }

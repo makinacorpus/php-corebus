@@ -27,4 +27,4 @@ services:
 
     MakinaCorpus\CoreBus\Bridge\EventStore\EventStoreEventBusDecorator:
         decorates: corebus.event.bus.internal
-        arguments: ['@.inner', '@event_store.event_store', '@corebus.event_store_info_extractor']
+        arguments: ['@.inner', '@event_store.event_store', '@corebus.event_store_info_extractor', '@?event_store.projector.player']

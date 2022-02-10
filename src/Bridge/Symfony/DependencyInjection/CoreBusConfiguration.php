@@ -20,11 +20,19 @@ final class CoreBusConfiguration implements ConfigurationInterface
 
         $rootNode
             ->children()
+                // Main adapter configuration.
                 ->enumNode('adapter')
-                    ->values(['goat'])
+                    ->values(['goat', 'memory'])
                     ->defaultValue('goat')
                 ->end()
                 ->variableNode('adapter_options')->end()
+
+                // Event store decorator configuration.
+                ->arrayNode('event_store')
+                    ->children()
+                        ->booleanNode('enabled')->defaultFalse()->end()
+                    ->end()
+                ->end()
             ->end()
         ;
 

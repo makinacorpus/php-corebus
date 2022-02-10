@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace MakinaCorpus\CoreBus\Bridge\Symfony\DependencyInjection;
 
+use Goat\Bridge\Symfony\GoatBundle;
+use MakinaCorpus\EventStore\Bridge\Symfony\EventStoreBundle;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Exception\InvalidArgumentException;
@@ -29,17 +31,26 @@ final class CoreBusExtension extends Extension
 
         switch ($config['adapter']) {
 
-            case 'goat':
-                $loader->load('corebus.makinacorpus-goat-adapter.yaml');
+            case 'memory':
+                // Fallback configuration, only sync processing will be allowed.
+                break;
 
-                // @todo "true" here is a very wrong default.
-                if ($config['adapter_options']['event_store'] ?? true) {
-                    $loader->load('corebus.makinacorpus-eventstore-adapter.yaml');
+            case 'goat':
+                if (!\in_array(GoatBundle::class, $container->getParameter('kernel.bundles'))) {
+                    throw new InvalidArgumentException(\sprintf("corebus.adapter requires makinacorpus/goat to be installed and %s bundle to be enabled when value is 'goat'.", GoatBundle::class));
                 }
+                $loader->load('corebus.makinacorpus-goat-adapter.yaml');
                 break;
 
             default:
                 throw new InvalidArgumentException(\sprintf('"corebus.adapter" value "%s" is not supported.'));
+        }
+
+        if ($config['event_store']['enabled'] ?? false) {
+            if (!\in_array(EventStoreBundle::class, $container->getParameter('kernel.bundles'))) {
+                throw new InvalidArgumentException(\sprintf("corebus.event_store.enabled requires makinacorpus/event-store to be installed and %s bundle to be enabled when value is 'goat'.", EventStoreBundle::class));
+            }
+            $loader->load('corebus.makinacorpus-eventstore-adapter.yaml');
         }
 
         // @todo Make this configurable
