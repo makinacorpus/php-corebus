@@ -2,10 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Goat\Bridge\Symfony\Tests\DependencyInjection;
+namespace MakinaCorpus\CoreBus\Tests\Bridge\Symfony\DependencyInjection;
 
-use Goat\Bridge\Symfony\GoatBundle;
-use Goat\Dispatcher\Dispatcher;
+use Goat\Query\Symfony\GoatQueryBundle;
 use MakinaCorpus\CoreBus\Bridge\EventStore\EventStoreEventBusDecorator;
 use MakinaCorpus\CoreBus\Bridge\Symfony\DependencyInjection\CoreBusExtension;
 use MakinaCorpus\CoreBus\CommandBus\CommandBus;
@@ -13,11 +12,12 @@ use MakinaCorpus\CoreBus\CommandBus\SynchronousCommandBus;
 use MakinaCorpus\CoreBus\EventBus\EventBus;
 use MakinaCorpus\EventStore\EventStore;
 use MakinaCorpus\EventStore\Bridge\Symfony\EventStoreBundle;
+use MakinaCorpus\MessageBroker\MessageBroker;
+use MakinaCorpus\MessageBroker\Bridge\Symfony\MessageBrokerBundle;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Definition;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBag;
-use MakinaCorpus\CoreBus\Bridge\Goat\Dispatcher\MessageBrokerCommandBus;
 
 final class KernelConfigurationTest extends TestCase
 {
@@ -58,11 +58,11 @@ final class KernelConfigurationTest extends TestCase
             $container->setAlias(EventStore::class, 'event_store.event_store');
         }
 
-        if (\in_array(GoatBundle::class, $bundles)) {
-            $goatDispatcherDefinition = new Definition();
-            $goatDispatcherDefinition->setClass(Dispatcher::class);
-            $container->setDefinition('goat.dispatcher', $goatDispatcherDefinition);
-            $container->setAlias(Dispatcher::class, 'goat.dispatcher');
+        if (\in_array(MessageBroker::class, $bundles)) {
+            $messageBrokerDefinition = new Definition();
+            $messageBrokerDefinition->setClass(MessageBroker::class);
+            $container->setDefinition('message_broker.message_broker', $messageBrokerDefinition);
+            $container->setAlias(MessageBroker::class, 'message_broker.message_broker');
         }
 
         return $container;
@@ -74,14 +74,22 @@ final class KernelConfigurationTest extends TestCase
     private function getMinimalConfig(): array
     {
         return [
-            'adapter' => 'memory',
+            'command_bus' => [
+                'adapter' => 'auto',
+            ],
+            'transaction' => [
+                'adapter' => 'auto',
+            ],
+            'event_store' => [
+                'enabled' => false,
+            ],
         ];
     }
 
     /**
      * Test default config for resulting tagged services
      */
-    public function testTaggedServicesConfigLoad()
+    public function testConfigLoadDefault()
     {
         $config = $this->getMinimalConfig();
 
@@ -107,7 +115,7 @@ final class KernelConfigurationTest extends TestCase
     /**
      * Test default config for resulting tagged services
      */
-    public function testTaggedServicesConfigLoadWithEventStoreEnabled()
+    public function testConfigLoadWithEventStoreEnabled()
     {
         $config = [
             'event_store' => [
@@ -130,7 +138,7 @@ final class KernelConfigurationTest extends TestCase
     /**
      * Test default config for resulting tagged services
      */
-    public function testTaggedServicesConfigLoadWithEventStoreDisabled()
+    public function testConfigLoadWithEventStoreDisabled()
     {
         $config = $this->getMinimalConfig();
 
@@ -149,20 +157,79 @@ final class KernelConfigurationTest extends TestCase
     /**
      * Test default config for resulting tagged services
      */
-    public function testTaggedServicesConfigLoadWithGoat()
+    public function testConfigLoadWithMessageBroker()
     {
         $config = [
-            'adapter' => 'goat',
+            'command_bus' => [
+                'adapter' => 'message-broker',
+            ],
         ] + $this->getMinimalConfig();
 
         $extension = new CoreBusExtension();
         $extension->load([$config], $container = $this->getContainer([], [
-            GoatBundle::class,
+            MessageBrokerBundle::class,
         ]));
 
-        // Ensure dispatcher configuration.
+        self::assertTrue($container->hasDefinition('corebus.command.bus.message_broker'));
+        self::assertSame('corebus.command.bus.message_broker', (string) $container->getAlias('corebus.command.bus.asynchronous'));
+
+        $container->compile();
+    }
+
+    /**
+     * Test default config for resulting tagged services
+     */
+    public function testTaggedServicesConfigLoadWithMessageBrokerAuto()
+    {
+        $config = $this->getMinimalConfig();
+
+        $extension = new CoreBusExtension();
+        $extension->load([$config], $container = $this->getContainer([], [
+            MessageBrokerBundle::class,
+        ]));
+
+        self::assertTrue($container->hasDefinition('corebus.command.bus.message_broker'));
+        self::assertSame('corebus.command.bus.message_broker', (string) $container->getAlias('corebus.command.bus.asynchronous'));
+
+        $container->compile();
+    }
+
+    /**
+     * Test default config for resulting tagged services
+     */
+    public function testConfigLoadWithGoatQuery()
+    {
+        $config = [
+            'transaction' => [
+                'adapter' => 'goat-query',
+            ],
+        ] + $this->getMinimalConfig();
+
+        $extension = new CoreBusExtension();
+        $extension->load([$config], $container = $this->getContainer([], [
+            GoatQueryBundle::class,
+        ]));
+
         self::assertTrue($container->hasDefinition('corebus.transaction.manager.goat_query'));
-        self::assertTrue($container->hasDefinition(MessageBrokerCommandBus::class));
+        self::assertSame('corebus.transaction.manager.goat_query', (string) $container->getAlias('corebus.transaction.manager'));
+
+        $container->compile();
+    }
+
+    /**
+     * Test default config for resulting tagged services
+     */
+    public function testConfigLoadWithGoatQueryAuto()
+    {
+        $config = $this->getMinimalConfig();
+
+        $extension = new CoreBusExtension();
+        $extension->load([$config], $container = $this->getContainer([], [
+            GoatQueryBundle::class,
+        ]));
+
+        self::assertTrue($container->hasDefinition('corebus.transaction.manager.goat_query'));
+        self::assertSame('corebus.transaction.manager.goat_query', (string) $container->getAlias('corebus.transaction.manager'));
 
         $container->compile();
     }

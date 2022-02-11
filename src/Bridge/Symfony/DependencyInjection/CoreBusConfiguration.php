@@ -20,12 +20,25 @@ final class CoreBusConfiguration implements ConfigurationInterface
 
         $rootNode
             ->children()
-                // Main adapter configuration.
-                ->enumNode('adapter')
-                    ->values(['goat', 'memory'])
-                    ->defaultValue('goat')
+                // Command bus adapter configuration.
+                ->arrayNode('command_bus')
+                    ->children()
+                        ->enumNode('adapter')
+                            ->values(['message-broker', 'memory', 'auto'])
+                            ->defaultValue('auto')
+                        ->end()
+                    ->end()
                 ->end()
-                ->variableNode('adapter_options')->end()
+
+                // Transaction adapter configuration.
+                ->arrayNode('transaction')
+                    ->children()
+                        ->enumNode('adapter')
+                            ->values(['goat-query', 'none', 'auto'])
+                            ->defaultValue('auto')
+                        ->end()
+                    ->end()
+                ->end()
 
                 // Event store decorator configuration.
                 ->arrayNode('event_store')

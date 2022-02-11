@@ -1,0 +1,42 @@
+#
+# This example symfony configuration file contains all configuration
+# options with their default values.
+#
+corebus:
+
+    #
+    # Dispatcher and message broker integration.
+    #
+    # Only makinacorpus/message-broker is supported for now.
+    #
+    # Or you could simply set "memory" instead for testing the synchronous
+    # command bus, or simply leave "auto" for automatic configuration.
+    #
+    command_bus:
+        #
+        # Can be "auto", "memory" or "message_broker".
+        #
+        adapter: auto
+
+    #
+    # Transaction manager for handling your database transactions.
+    #
+    # There is only one working implementation at this time which
+    # uses makinacorpus/goat-query. It will be automatically configured
+    # to this when the bundle is detected, otherwise a null instance
+    # will be set.
+    #
+    transaction:
+        #
+        # Can be "auto", "goat-query" or "none".
+        #
+        adapter: auto
+
+    #
+    # Enable the makinacorpus/event-store integration.
+    #
+    # Every domain event that runs throught the internal event bus will be
+    # stored in the event store.
+    #
+    event_store:
+        enabled: false

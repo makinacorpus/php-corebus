@@ -1,0 +1,26 @@
+#
+# Default sample configuration for corebus services.
+#
+# Integrates with services from makinacorpus/message-broker package when plugged
+# with the provided Symfony bundle.
+#
+services:
+    _defaults:
+        autowire: false
+        autoconfigure: false
+        public: false
+
+    #
+    # Defines a command bus which queues messages into goat message broker.
+    #
+    # Also override the "corebus.command.bus.asynchronous" alias to point to
+    # this component instead, but beware, depending upon file load order, you
+    # might need to reset it into your main services.yaml file.
+    #
+
+    corebus.command.bus.message_broker:
+        class: MakinaCorpus\CoreBus\Bridge\MessageBroker\MessageBrokerCommandBusAdapter
+        arguments: ['@message_broker.message_broker']
+
+    corebus.command.bus.asynchronous:
+        alias: corebus.command.bus.message_broker

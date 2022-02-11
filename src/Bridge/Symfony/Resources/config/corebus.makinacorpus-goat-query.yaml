@@ -1,0 +1,33 @@
+#
+# Default sample configuration for corebus services.
+#
+# Integrates with services from makinacorpus/goat-query package when plugged
+# with the provided Symfony bundle.
+#
+services:
+    _defaults:
+        autowire: false
+        autoconfigure: false
+        public: false
+
+    #
+    # Create an alias toward goat-query default SQL connection.
+    #
+    # You can override this alias target if your business SQL connection is
+    # not the default one.
+    #
+    goat.runner.corebus:
+        alias: goat.runner.default
+
+    #
+    # Defines SQL transaction manager.
+    #
+    corebus.transaction.manager.goat_query:
+        class: MakinaCorpus\CoreBus\Bridge\GoatQuery\GoatQueryTransactionManager
+        arguments: ['@goat.runner.corebus']
+
+    #
+    # Overide default transaction manager to use goat-query one.
+    #
+    corebus.transaction.manager:
+        alias: corebus.transaction.manager.goat_query

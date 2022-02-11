@@ -2,7 +2,7 @@
 
 declare (strict_types=1);
 
-namespace MakinaCorpus\CoreBus\Bridge\Goat\Transaction;
+namespace MakinaCorpus\CoreBus\Bridge\GoatQuery;
 
 use Goat\Runner\Runner;
 use MakinaCorpus\CoreBus\Implementation\Transaction\Transaction;

@@ -2,19 +2,19 @@
 
 declare (strict_types=1);
 
-namespace MakinaCorpus\CoreBus\Bridge\Goat\Dispatcher;
+namespace MakinaCorpus\CoreBus\Bridge\MessageBroker;
 
-use Goat\MessageBroker\MessageBroker;
 use MakinaCorpus\CoreBus\CommandBus\CommandBus;
 use MakinaCorpus\CoreBus\CommandBus\CommandResponsePromise;
 use MakinaCorpus\CoreBus\Implementation\CommandBus\Response\NeverCommandResponsePromise;
 use MakinaCorpus\Message\Envelope;
+use MakinaCorpus\MessageBroker\MessageBroker;
 
 /**
  * From our command bus interface, catch messages and send them into
- * makinacorpus/goat message broker instead.
+ * makinacorpus/message-broker message broker instead.
  */
-final class MessageBrokerCommandBus implements CommandBus
+final class MessageBrokerCommandBusAdapter implements CommandBus
 {
     private MessageBroker $messageBroker;
 
