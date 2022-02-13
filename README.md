@@ -7,20 +7,31 @@ Discrete means that your domain code will not be tainted by this component
 hard-dependency, aside attributes used for targeting command handler methods
 and event listener methods. Your domain business code remains dependency-free.
 
-What does this package provide:
+Event bus features:
 
  - Internal synchronous event dispatcher.
- - Event listener locator.
- - Internal synchronous command bus dispatcher implementation.
- - Command process transaction handling.
- - Command handler locator.
- - Attributes for aspect-driven domain code configuration.
- - Event listener and command handler efficient caching mechanism.
+ - Event listener locator based upon PHP attributes.
+ - Event listener locator fast dumped PHP cache.
+ - External event dispatcher (unplugged yet).
+
+Command bus features:
+
+ - Transactional synchronous command bus that handles your transactions.
+ - Event buffering during transactions, which flushes events to the external
+   event dispatcher only in case of transaction success.
+ - Command handler locator based upon PHP attributes.
+ - Command handler locator fast dumped PHP cache.
+ - Default transaction implementation using `makinacorpus/goat-query`.
+ - Command asynchronous dispatcher with implementation that plugs to
+   `makinacorpus/message-broker` message broker interface.
+
+Other various features:
+
+ - Worker object for consuming asynchronous events in CLI.
+ - Symfony integration for everything, including console commands for the
+   command bus worker.
+ - Global attributes for aspect-driven domain code configuration.
  - Simple command bus interface.
-
-What it does WILL provide (but is not there yet):
-
- - Message broker (asynchronous command bus) implementation using postgresql.
 
 # Design
 
@@ -81,6 +92,25 @@ Two implementations are provided:
 Everything is hidden behind interfaces and different implementations are easy
 to implement. Your projects are not required to choose either one of those
 implementations, in the opposite, is encouraged implementing its own.
+
+# Roadmap
+
+## Short-term
+
+ - [x] Import and rewrite MessageBroker from `makinacorpus/goat`, or create a new package for it.
+ - [x] Write a dispatcher implementation that uses MessageBroker.
+ - [x] Import and rewrite RetryStrategy from `makinacorpus/goat`.
+ - [x] Import and rewrite RetryDispatcherDecorator from `makinacorpus/goat`.
+ - [ ] Plug RetryDispatcherDecorator via Symfony bundle.
+ - [ ] Implement profiling decorator for event bus using `makinacorpus/profiling`.
+ - [ ] Implement profiling decorator for command bus using `makinacorpus/profiling`.
+ - [x] Import and rewrite the Worker from `makinacorpus/goat`.
+ - [ ] Plug worker as a Symfony command.
+
+## Long-term
+
+ - [ ] Allow multiple message brokers to co-exist.
+ - [ ] Add message routing capabilities via the broker.
 
 # Setup
 
