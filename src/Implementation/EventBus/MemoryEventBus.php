@@ -30,6 +30,7 @@ final class MemoryEventBus implements EventBus, LoggerAwareInterface
         $this->logger->debug("MemoryEventBus: Received event: {event}", ['event' => $event]);
 
         $count = 0;
+
         foreach ($this->eventListenerLocator->find($event) as $eventListener) {
             ++$count;
             $eventListener($event);

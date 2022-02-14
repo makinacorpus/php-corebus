@@ -2,7 +2,7 @@
 # This example symfony configuration file contains all configuration
 # options with their default values.
 #
-corebus:
+core_bus:
 
     #
     # Dispatcher and message broker integration.

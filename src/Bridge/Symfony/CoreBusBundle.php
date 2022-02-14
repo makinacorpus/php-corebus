@@ -9,6 +9,7 @@ use MakinaCorpus\CoreBus\Attr\EventListener as EventListenerAttribute;
 use MakinaCorpus\CoreBus\Bridge\Symfony\DependencyInjection\Compiler\RegisterCommandHandlerPass;
 use MakinaCorpus\CoreBus\Bridge\Symfony\DependencyInjection\Compiler\RegisterEventInfoExtractorPass;
 use MakinaCorpus\CoreBus\Bridge\Symfony\DependencyInjection\Compiler\RegisterEventListenerPass;
+use MakinaCorpus\CoreBus\Bridge\Symfony\DependencyInjection\CoreBusExtension;
 use MakinaCorpus\CoreBus\CommandBus\CommandBus;
 use MakinaCorpus\CoreBus\CommandBus\CommandBusAware;
 use MakinaCorpus\CoreBus\CommandBus\CommandHandler;
@@ -17,6 +18,7 @@ use MakinaCorpus\CoreBus\EventBus\EventBusAware;
 use MakinaCorpus\CoreBus\EventBus\EventListener;
 use Symfony\Component\DependencyInjection\ChildDefinition;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\Extension\ExtensionInterface;
 use Symfony\Component\DependencyInjection\Reference;
 use Symfony\Component\HttpKernel\Bundle\Bundle;
 
@@ -65,5 +67,13 @@ final class CoreBusBundle extends Bundle
         $container->addCompilerPass(new RegisterCommandHandlerPass());
         $container->addCompilerPass(new RegisterEventListenerPass());
         $container->addCompilerPass(new RegisterEventInfoExtractorPass());
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getContainerExtension(): ?ExtensionInterface
+    {
+        return new CoreBusExtension();
     }
 }

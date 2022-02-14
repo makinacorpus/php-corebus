@@ -41,7 +41,7 @@ final class RetryStrategyCommandBusDecorator implements SynchronousCommandBus, L
         $envelope = Envelope::wrap($command);
 
         try {
-            $this->decorated->dispatchCommand($envelope);
+            return $this->decorated->dispatchCommand($envelope);
         } catch (\Throwable $e) {
             if ($envelope->hasProperty(Property::RETRY_KILLSWITCH)) {
                 $this->logger->debug("RetryStrategyCommandBusDecorator: Failure will not be retried, killed by killswitch.", ['exception' => $e]);

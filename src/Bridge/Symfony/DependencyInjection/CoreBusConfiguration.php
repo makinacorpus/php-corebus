@@ -14,7 +14,7 @@ final class CoreBusConfiguration implements ConfigurationInterface
      */
     public function getConfigTreeBuilder()
     {
-        $treeBuilder = new TreeBuilder('corebus');
+        $treeBuilder = new TreeBuilder('core_bus');
 
         $rootNode = $treeBuilder->getRootNode();
 

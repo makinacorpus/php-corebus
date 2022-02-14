@@ -8,6 +8,7 @@ use MakinaCorpus\CoreBus\CommandBus\CommandHandlerLocator;
 use MakinaCorpus\CoreBus\CommandBus\CommandResponsePromise;
 use MakinaCorpus\CoreBus\CommandBus\SynchronousCommandBus;
 use MakinaCorpus\CoreBus\Implementation\CommandBus\Response\SynchronousCommandResponsePromise;
+use MakinaCorpus\Message\Envelope;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\NullLogger;
@@ -35,6 +36,10 @@ final class MemoryCommandBus implements SynchronousCommandBus, LoggerAwareInterf
         $this->logger->debug("MemoryCommandBus: Received command: {command}", ['command' => $command]);
 
         try {
+            if ($command instanceof Envelope) {
+                $command = $command->getMessage();
+            }
+
             return SynchronousCommandResponsePromise::success(
                 ($this->handlerLocator->find($command))($command)
             );
