@@ -11,6 +11,8 @@ use Psr\Log\NullLogger;
 
 /**
  * This class allows to replace your command bus during unit tests.
+ *
+ * @codeCoverageIgnore
  */
 class TestingCommandBus implements CommandBus
 {

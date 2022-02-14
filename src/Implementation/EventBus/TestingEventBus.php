@@ -9,6 +9,8 @@ use Psr\Log\NullLogger;
 
 /**
  * This class allows to replace your event bus during unit tests.
+ *
+ * @codeCoverageIgnore
  */
 class TestingEventBus implements EventBus
 {

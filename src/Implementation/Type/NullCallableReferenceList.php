@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace MakinaCorpus\CoreBus\Implementation\Type;
 
+/**
+ * @codeCoverageIgnore
+ */
 final class NullCallableReferenceList implements CallableReferenceList
 {
     /**

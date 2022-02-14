@@ -47,6 +47,8 @@ final class MemoryCommandBus implements SynchronousCommandBus, LoggerAwareInterf
 
     /**
      * Normalize exception trace.
+     *
+     * @codeCoverageIgnore
      */
     private function normalizeExceptionTrace(\Throwable $exception): string
     {

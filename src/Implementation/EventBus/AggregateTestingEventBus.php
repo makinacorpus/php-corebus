@@ -14,6 +14,8 @@ use PHPUnit\Framework\ExpectationFailedException;
  *
  * This implementation will raise errors if event are missing the Aggregate()
  * attribute/annotation.
+ *
+ * @codeCoverageIgnore
  */
 final class AggregateTestingEventBus extends TestingEventBus
 {
