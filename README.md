@@ -104,6 +104,7 @@ implementations, in the opposite, is encouraged implementing its own.
  - [x] Plug RetryDispatcherDecorator via Symfony bundle.
  - [x] Import and rewrite the Worker from `makinacorpus/goat`.
  - [x] Plug worker as a Symfony command.
+ - [ ] Write proper documentation.
 
 ## Middle-term
 
