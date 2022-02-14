@@ -27,6 +27,11 @@ final class CoreBusConfiguration implements ConfigurationInterface
                             ->values(['message-broker', 'memory', 'auto'])
                             ->defaultValue('auto')
                         ->end()
+                        ->arrayNode('retry_strategy')
+                            ->children()
+                                ->booleanNode('enabled')->defaultFalse()->end()
+                            ->end()
+                        ->end()
                     ->end()
                 ->end()
 

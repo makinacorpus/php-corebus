@@ -10,6 +10,8 @@ use MakinaCorpus\CoreBus\Bridge\Symfony\DependencyInjection\CoreBusExtension;
 use MakinaCorpus\CoreBus\CommandBus\CommandBus;
 use MakinaCorpus\CoreBus\CommandBus\SynchronousCommandBus;
 use MakinaCorpus\CoreBus\EventBus\EventBus;
+use MakinaCorpus\CoreBus\Tests\Bridge\Symfony\Command\CommandPushCommand;
+use MakinaCorpus\CoreBus\Tests\Bridge\Symfony\Command\CommandWorkerCommand;
 use MakinaCorpus\EventStore\EventStore;
 use MakinaCorpus\EventStore\Bridge\Symfony\EventStoreBundle;
 use MakinaCorpus\MessageBroker\MessageBroker;
@@ -109,6 +111,10 @@ final class KernelConfigurationTest extends TestCase
         self::assertFalse($container->hasDefinition('corebus.event_store_info_extractor.attribute'));
         self::assertFalse($container->hasDefinition(EventStoreEventBusDecorator::class));
 
+        // Console commands.
+        self::assertTrue($container->hasDefinition(CommandPushCommand::class));
+        self::assertTrue($container->hasDefinition(CommandWorkerCommand::class));
+
         $container->compile();
     }
 
@@ -192,6 +198,55 @@ final class KernelConfigurationTest extends TestCase
         self::assertSame('corebus.command.bus.message_broker', (string) $container->getAlias('corebus.command.bus.asynchronous'));
 
         $container->compile();
+    }
+
+    /**
+     * Test default config for resulting tagged services
+     */
+    public function testConfigLoadRetryStrategy()
+    {
+        $config = [
+            'command_bus' => [
+                'adapter' => 'message-broker',
+                'retry_strategy' => [
+                    'enabled' => true,
+                ],
+            ],
+        ] + $this->getMinimalConfig();
+
+        $extension = new CoreBusExtension();
+        $extension->load([$config], $container = $this->getContainer([], [
+            MessageBrokerBundle::class,
+        ]));
+
+        self::assertSame('corebus.command.bus.message_broker', (string) $container->getAlias('corebus.command.bus.asynchronous'));
+        self::assertTrue($container->hasAlias('corebus.retry_strategy'));
+        self::assertTrue($container->hasDefinition('corebus.command.bus.message_broker'));
+        self::assertTrue($container->hasDefinition('corebus.retry_strategy.default'));
+
+        $container->compile();
+    }
+
+    /**
+     * Test default config for resulting tagged services
+     */
+    public function testConfigLoadRetryStrategyFailWithoutMessageBroker()
+    {
+        $config = [
+            'command_bus' => [
+                'adapter' => 'memory',
+                'retry_strategy' => [
+                    'enabled' => true,
+                ],
+            ],
+        ] + $this->getMinimalConfig();
+
+        $extension = new CoreBusExtension();
+
+        self::expectExceptionMessageMatches('/corebus\.command_bus\.retry_strategy/');
+        $extension->load([$config], $this->getContainer([], [
+            MessageBrokerBundle::class,
+        ]));
     }
 
     /**

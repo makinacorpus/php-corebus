@@ -101,11 +101,13 @@ implementations, in the opposite, is encouraged implementing its own.
  - [x] Write a dispatcher implementation that uses MessageBroker.
  - [x] Import and rewrite RetryStrategy from `makinacorpus/goat`.
  - [x] Import and rewrite RetryDispatcherDecorator from `makinacorpus/goat`.
- - [ ] Plug RetryDispatcherDecorator via Symfony bundle.
+ - [x] Plug RetryDispatcherDecorator via Symfony bundle.
+ - [ ] Create a retry strategy chain for having more than one instance.
+ - [ ] Implement retry strategy using our attributes.
  - [ ] Implement profiling decorator for event bus using `makinacorpus/profiling`.
  - [ ] Implement profiling decorator for command bus using `makinacorpus/profiling`.
  - [x] Import and rewrite the Worker from `makinacorpus/goat`.
- - [ ] Plug worker as a Symfony command.
+ - [x] Plug worker as a Symfony command.
 
 ## Long-term
 

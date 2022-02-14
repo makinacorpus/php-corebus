@@ -31,15 +31,18 @@ final class CoreBusExtension extends Extension
         $eventStoreBundleDetected = \in_array(EventStoreBundle::class, $kernelBundles);
         $goatQueryBundleDetected = \in_array(GoatQueryBundle::class, $kernelBundles);
         $messageBrokerBundleDetected = \in_array(MessageBrokerBundle::class, $kernelBundles);
+        $messageBrokerEnabled = false;
 
         $loader = new YamlFileLoader($container, new FileLocator(\dirname(__DIR__).'/Resources/config'));
         $loader->load('corebus.core.yaml');
+        $loader->load('corebus.console.yaml');
 
         switch ($config['command_bus']['adapter'] ?? 'auto') {
 
             case 'auto':
                 if ($messageBrokerBundleDetected) {
                     $loader->load('corebus.makinacorpus-message-broker.yaml');
+                    $messageBrokerEnabled = true;
                 }
                 // Fallback configuration, only sync processing will be allowed.
                 break;
@@ -50,13 +53,14 @@ final class CoreBusExtension extends Extension
 
             case 'message-broker':
                 if (!$messageBrokerBundleDetected) {
-                    throw new InvalidArgumentException(\sprintf("corebus.command_bus.adapter requires makinacorpus/message-broker to be installed and %s bundle to be enabled when value is 'message-broker'.", MessageBrokerBundle::class));
+                    throw new InvalidArgumentException(\sprintf("'corebus.command_bus.adapter' requires 'makinacorpus/message-broker' to be installed and '%s' bundle to be enabled when value is 'message-broker'.", MessageBrokerBundle::class));
                 }
                 $loader->load('corebus.makinacorpus-message-broker.yaml');
+                $messageBrokerEnabled = true;
                 break;
 
             default:
-                throw new InvalidArgumentException(\sprintf("corebus.command_bus.adapter value '%s' is not supported.", $config['command_bus']['adapter']));
+                throw new InvalidArgumentException(\sprintf("'corebus.command_bus.adapter' value '%s' is not supported.", $config['command_bus']['adapter']));
         }
 
         switch ($config['transaction']['adapter'] ?? 'auto') {
@@ -74,18 +78,25 @@ final class CoreBusExtension extends Extension
 
             case 'goat-query':
                 if (!$goatQueryBundleDetected) {
-                    throw new InvalidArgumentException(\sprintf("corebus.transaction.adapter requires makinacorpus/goat-query-bundle to be installed and %s bundle to be enabled when value is 'goat-query'.", GoatQueryBundle::class));
+                    throw new InvalidArgumentException(\sprintf("'corebus.transaction.adapter' requires 'makinacorpus/goat-query-bundle' to be installed and %s bundle to be enabled when value is 'goat-query'.", GoatQueryBundle::class));
                 }
                 $loader->load('corebus.makinacorpus-goat-query.yaml');
                 break;
 
             default:
-                throw new InvalidArgumentException(\sprintf("corebus.command_bus.adapter value '%s' is not supported.", $config['command_bus']['adapter']));
+                throw new InvalidArgumentException(\sprintf("'corebus.command_bus.adapter' value '%s' is not supported.", $config['command_bus']['adapter']));
+        }
+
+        if ($config['command_bus']['retry_strategy']['enabled'] ?? false) {
+            if (!$messageBrokerEnabled) {
+                throw new InvalidArgumentException(\sprintf("'corebus.command_bus.retry_strategy.enabled' requires that 'command_bus.adapter' is set to 'message_broker'.", EventStoreBundle::class));
+            }
+            $loader->load('corebus.retry_strategy.yaml');
         }
 
         if ($config['event_store']['enabled'] ?? false) {
             if (!$eventStoreBundleDetected) {
-                throw new InvalidArgumentException(\sprintf("corebus.event_store.enabled requires makinacorpus/event-store to be installed and %s bundle to be enabled.", EventStoreBundle::class));
+                throw new InvalidArgumentException(\sprintf("'corebus.event_store.enabled' requires 'makinacorpus/event-store' to be installed and %s bundle to be enabled.", EventStoreBundle::class));
             }
             $loader->load('corebus.makinacorpus-eventstore-adapter.yaml');
         }

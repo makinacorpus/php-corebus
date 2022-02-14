@@ -1,0 +1,21 @@
+#
+# Default sample configuration for corebus services.
+#
+# Usually, you probably will not have to make much modification if you with
+# to keep a purely synchronous application.
+#
+# This file must be loaded before other defined in this same directory.
+#
+services:
+    _defaults:
+        autowire: true
+        autoconfigure: true
+        public: false
+
+    MakinaCorpus\CoreBus\Tests\Bridge\Symfony\Command\CommandPushCommand:
+        arguments: ['@corebus.command.bus.asynchronous', '@corebus.command.bus.synchronous', '@?message_broker.message_broker', '@normalization.name_map']
+        tags: ['command.console']
+
+    MakinaCorpus\CoreBus\Tests\Bridge\Symfony\Command\CommandWorkerCommand:
+        arguments: ['@corebus.command.bus.synchronous', '@?message_broker.message_broker']
+        tags: ['command.console']

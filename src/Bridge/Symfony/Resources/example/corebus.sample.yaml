@@ -18,6 +18,15 @@ corebus:
         #
         adapter: auto
 
+        #
+        # Retry strategy for messages.
+        #
+        # This setting has a direct explicit dependency on the "message_broker"
+        # adapter, and thus can only be enabled in such case.
+        #
+        retry_strategy:
+            enabled: false
+
     #
     # Transaction manager for handling your database transactions.
     #
