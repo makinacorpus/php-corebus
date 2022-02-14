@@ -102,17 +102,22 @@ implementations, in the opposite, is encouraged implementing its own.
  - [x] Import and rewrite RetryStrategy from `makinacorpus/goat`.
  - [x] Import and rewrite RetryDispatcherDecorator from `makinacorpus/goat`.
  - [x] Plug RetryDispatcherDecorator via Symfony bundle.
- - [ ] Create a retry strategy chain for having more than one instance.
- - [ ] Implement retry strategy using our attributes.
- - [ ] Implement profiling decorator for event bus using `makinacorpus/profiling`.
- - [ ] Implement profiling decorator for command bus using `makinacorpus/profiling`.
  - [x] Import and rewrite the Worker from `makinacorpus/goat`.
  - [x] Plug worker as a Symfony command.
 
+## Middle-term
+
+ - [ ] Implement profiling decorator for event bus using `makinacorpus/profiling`.
+ - [ ] Implement profiling decorator for command bus using `makinacorpus/profiling`.
+
 ## Long-term
 
- - [ ] Allow multiple message brokers to co-exist.
+ - [ ] Allow multiple message brokers to co-exist, one for each queue.
+ - [ ] Discriminate queues in Symfony commands.
+ - [ ] Implement dead letter queue routing.
  - [ ] Add message routing capabilities via the broker.
+ - [ ] Create a retry strategy chain for having more than one instance.
+ - [ ] Implement retry strategy using our attributes.
 
 # Setup
 
