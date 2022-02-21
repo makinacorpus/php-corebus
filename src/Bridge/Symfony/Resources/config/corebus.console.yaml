@@ -12,10 +12,10 @@ services:
         autoconfigure: true
         public: false
 
-    MakinaCorpus\CoreBus\Tests\Bridge\Symfony\Command\CommandPushCommand:
-        arguments: ['@corebus.command.bus.asynchronous', '@corebus.command.bus.synchronous', '@?message_broker.message_broker', '@normalization.name_map']
-        tags: ['command.console']
+    MakinaCorpus\CoreBus\Bridge\Symfony\Command\CommandPushCommand:
+        arguments: ['@corebus.command.bus.asynchronous', '@corebus.command.bus.synchronous', '@normalization.serializer', '@normalization.name_map']
+        tags: ['console.command']
 
-    MakinaCorpus\CoreBus\Tests\Bridge\Symfony\Command\CommandWorkerCommand:
+    MakinaCorpus\CoreBus\Bridge\Symfony\Command\CommandWorkerCommand:
         arguments: ['@corebus.command.bus.synchronous', '@?message_broker.message_broker']
-        tags: ['command.console']
+        tags: ['console.command']

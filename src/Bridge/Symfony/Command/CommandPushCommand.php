@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace MakinaCorpus\CoreBus\Tests\Bridge\Symfony\Command;
+namespace MakinaCorpus\CoreBus\Bridge\Symfony\Command;
 
 use MakinaCorpus\CoreBus\CommandBus\CommandBus;
 use MakinaCorpus\CoreBus\CommandBus\SynchronousCommandBus;
@@ -20,7 +20,7 @@ use Symfony\Component\Console\Output\OutputInterface;
  */
 final class CommandPushCommand extends Command
 {
-    protected static $defaultName = 'corebus:command:push';
+    protected static $defaultName = 'corebus:push';
 
     private CommandBus $asyncCommandBus;
     private SynchronousCommandBus $syncCommandBus;

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace MakinaCorpus\CoreBus\Tests\Bridge\Symfony\Command;
+namespace MakinaCorpus\CoreBus\Bridge\Symfony\Command;
 
 use MakinaCorpus\CoreBus\CommandBus\SynchronousCommandBus;
 use MakinaCorpus\CoreBus\Implementation\Worker\Worker;
@@ -20,7 +20,7 @@ use Symfony\Component\Console\Output\OutputInterface;
  */
 final class CommandWorkerCommand extends Command
 {
-    protected static $defaultName = 'corebus:command:worker';
+    protected static $defaultName = 'corebus:worker';
 
     private SynchronousCommandBus $commandBus;
     private ?MessageBroker $messageBroker;
