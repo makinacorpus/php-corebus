@@ -57,6 +57,8 @@ final class EventStoreEventBusDecorator implements EventBus
         $this->eventInfoExtractor->extract($event, $eventInfo);
 
         if ((new AttributeLoader())->loadFromClass($event)->has(NoStore::class)) {
+            $this->decorated->notifyEvent($event);
+
             return;
         }
 
