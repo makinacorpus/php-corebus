@@ -49,6 +49,7 @@ final class CoreBusConfiguration implements ConfigurationInterface
                 ->arrayNode('event_store')
                     ->children()
                         ->booleanNode('enabled')->defaultFalse()->end()
+                        ->booleanNode('log_commands')->defaultFalse()->end()
                     ->end()
                 ->end()
             ->end()

@@ -99,6 +99,10 @@ final class CoreBusExtension extends Extension
                 throw new InvalidArgumentException(\sprintf("'corebus.event_store.enabled' requires 'makinacorpus/event-store' to be installed and %s bundle to be enabled.", EventStoreBundle::class));
             }
             $loader->load('corebus.makinacorpus-eventstore-adapter.yaml');
+
+            if ($config['event_store']['log_commands'] ?? false) {
+                $loader->load('corebus.makinacorpus-eventstore-command-adapter.yaml');
+            }
         }
 
         // @todo Make this configurable

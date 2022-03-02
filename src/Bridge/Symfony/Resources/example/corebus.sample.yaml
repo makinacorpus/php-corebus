@@ -48,4 +48,15 @@ core_bus:
     # stored in the event store.
     #
     event_store:
+        #
+        # Enable it.
+        #
         enabled: false
+
+        #
+        # Logs commands into event store as well.
+        #
+        # This exists for backward compatilibity purpose and should probably
+        # not be enabled on brand new projects.
+        #
+        log_commands: false
