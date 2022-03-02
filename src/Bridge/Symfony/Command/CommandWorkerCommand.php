@@ -40,7 +40,7 @@ final class CommandWorkerCommand extends Command
     {
         $this
             ->setDescription('Run bus worker daemon')
-            // ->addOption('limit', 'l', InputOption::VALUE_OPTIONAL, "Number of messages to consume", null)
+            ->addOption('limit', 'l', InputOption::VALUE_OPTIONAL, "Number of messages to consume", null)
             // ->addOption('idle-sleep', 's', InputOption::VALUE_OPTIONAL, "Idle sleep time, in micro seconds", null)
             ->addOption('memory-limit', 'm', InputOption::VALUE_OPTIONAL, "Maximum memory consumption; eg. 128M, 1G, ...", null)
             ->addOption('time-limit', 't', InputOption::VALUE_OPTIONAL, "Maximum run time; eg. '1 hour', '2 minutes', ...", null)
@@ -60,8 +60,9 @@ final class CommandWorkerCommand extends Command
         $startedTimestamp = $startedAt->getTimestamp();
         $memoryLimit = self::parseSize($input->getOption('memory-limit'));
         $timeLimit = self::parseTime($input->getOption('time-limit'));
+        $eventCountLimit = (int) $input->getOption('limit');
 
-        $worker = new Worker($this->commandBus, $this->messageBroker);
+        $worker = new Worker($this->commandBus, $this->messageBroker, null, $eventCountLimit);
 
         $handleTick = static function () use ($worker, $startedTimestamp, $memoryLimit, $timeLimit, $output) {
             if ($memoryLimit && $memoryLimit <= \memory_get_usage(true)) {

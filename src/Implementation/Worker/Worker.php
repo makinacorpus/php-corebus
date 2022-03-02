@@ -23,12 +23,15 @@ final class Worker implements LoggerAwareInterface
     private int $idleSleepTime;
     private ?\DateTimeInterface $startedAt = null;
     private bool $shouldStop = false;
+    private int $limit = 0;
+    private int $done = 0;
 
-    public function __construct(SynchronousCommandBus $commandBus, MessageBroker $messageBroker, ?int $idleSleepTime = null)
+    public function __construct(SynchronousCommandBus $commandBus, MessageBroker $messageBroker, ?int $idleSleepTime = null, int $limit = 0)
     {
         $this->commandBus = $commandBus;
         $this->messageBroker = $messageBroker;
         $this->idleSleepTime = $idleSleepTime ?? self::DEFAULT_IDLE_SLEEP_TIME;
+        $this->limit = $limit;
     }
 
     public function getEventDispatcher(): EventDispatcherInterface
@@ -78,6 +81,12 @@ final class Worker implements LoggerAwareInterface
                 // processing, retry or reject are business concerns and can't
                 // be generalized by a technical layer such as this one.
                 $this->dispatch(WorkerEvent::error());
+            }
+
+            $this->done++;
+
+            if (0 < $this->limit && $this->done >= $this->limit) {
+                $this->shouldStop = true;
             }
         }
 
