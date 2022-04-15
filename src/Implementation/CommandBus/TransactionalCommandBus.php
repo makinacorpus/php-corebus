@@ -14,6 +14,7 @@ use MakinaCorpus\CoreBus\EventBus\EventBus;
 use MakinaCorpus\CoreBus\Implementation\EventBus\EventBuffer;
 use MakinaCorpus\CoreBus\Implementation\EventBus\EventBufferManager;
 use MakinaCorpus\CoreBus\Implementation\Transaction\TransactionManager;
+use MakinaCorpus\Message\Envelope;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\NullLogger;
@@ -79,7 +80,13 @@ final class TransactionalCommandBus implements SynchronousCommandBus, EventBus, 
         }
 
         try {
-            $disableTransaction = (!$multiple) && (new AttributeLoader())->loadFromClass(\get_class($command))->has(NoTransaction::class);
+            if ($command instanceof Envelope) {
+                $message = $command->getMessage();
+            } else {
+                $message = $command;
+            }
+
+            $disableTransaction = (!$multiple) && (new AttributeLoader())->loadFromClass($message)->has(NoTransaction::class);
 
             if ($disableTransaction) {
                 $this->logger->notice("TransactionalCommandBus: Running {command} without transaction.", ['command' => \get_class($command)]);
