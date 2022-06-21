@@ -13,6 +13,8 @@ use MakinaCorpus\CoreBus\Bridge\Symfony\DependencyInjection\CoreBusExtension;
 use MakinaCorpus\CoreBus\CommandBus\CommandBus;
 use MakinaCorpus\CoreBus\CommandBus\CommandBusAware;
 use MakinaCorpus\CoreBus\CommandBus\CommandHandler;
+use MakinaCorpus\CoreBus\CommandBus\SynchronousCommandBus;
+use MakinaCorpus\CoreBus\CommandBus\SynchronousCommandBusAware;
 use MakinaCorpus\CoreBus\EventBus\EventBus;
 use MakinaCorpus\CoreBus\EventBus\EventBusAware;
 use MakinaCorpus\CoreBus\EventBus\EventListener;
@@ -40,6 +42,10 @@ final class CoreBusBundle extends Bundle
         $container
             ->registerForAutoconfiguration(CommandBusAware::class)
             ->addMethodCall('setCommandBus', [new Reference(CommandBus::class)])
+        ;
+        $container
+            ->registerForAutoconfiguration(SynchronousCommandBusAware::class)
+            ->addMethodCall('setSynchronousCommandBus', [new Reference(SynchronousCommandBus::class)])
         ;
 
         $container->registerAttributeForAutoconfiguration(

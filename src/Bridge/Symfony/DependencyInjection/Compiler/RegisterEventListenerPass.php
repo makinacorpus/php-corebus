@@ -15,6 +15,8 @@ use Symfony\Component\DependencyInjection\Exception\InvalidArgumentException;
 
 final class RegisterEventListenerPass implements CompilerPassInterface
 {
+    use RegisterClassTrait;
+
     /**
      * {@inheritdoc}
      */
@@ -42,6 +44,8 @@ final class RegisterEventListenerPass implements CompilerPassInterface
             // @todo Later, use a service locator instead.
             $definition->setPublic(true);
             $dumper->appendFromClass($className, $id);
+
+            $this->prepareClass($className, $definition);
         }
 
         if ($dumper->isEmpty()) {
