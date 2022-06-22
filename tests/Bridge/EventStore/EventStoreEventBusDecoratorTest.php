@@ -7,6 +7,7 @@ namespace MakinaCorpus\CoreBus\Tests\Bridge\EventStore;
 use MakinaCorpus\CoreBus\Bridge\EventStore\EventInfoExtratorChain;
 use MakinaCorpus\CoreBus\Bridge\EventStore\EventStoreEventBusDecorator;
 use MakinaCorpus\CoreBus\Implementation\EventBus\NullEventBus;
+use MakinaCorpus\CoreBus\Tests\Implementation\Mock\MockCommandAsEvent;
 use MakinaCorpus\CoreBus\Tests\Implementation\Mock\MockEventNoStore;
 use MakinaCorpus\CoreBus\Tests\Implementation\Mock\MockEventStore;
 use MakinaCorpus\EventStore\Event;
@@ -44,6 +45,21 @@ final class EventStoreEventBusDecoratorTest extends TestCase
 
         self::assertSame(0, $eventStore->countStored());
         $decorator->notifyEvent($event);
+        self::assertSame(0, $eventStore->countStored());
+    }
+
+    public function testEventIsIgnoredWhenCommandAsEvent(): void
+    {
+        $eventStore = new DummyArrayEventStore();
+        $eventBus = new NullEventBus();
+        $eventInfoExtractor = new EventInfoExtratorChain([]);
+
+        $decorator = new EventStoreEventBusDecorator($eventBus, $eventStore, $eventInfoExtractor);
+
+        $command = new MockCommandAsEvent();
+
+        self::assertSame(0, $eventStore->countStored());
+        $decorator->notifyEvent($command);
         self::assertSame(0, $eventStore->countStored());
     }
 

@@ -4,6 +4,7 @@ declare (strict_types=1);
 
 namespace MakinaCorpus\CoreBus\Bridge\EventStore;
 
+use MakinaCorpus\CoreBus\Attr\CommandAsEvent;
 use MakinaCorpus\CoreBus\Attr\NoStore;
 use MakinaCorpus\CoreBus\Attribute\AttributeLoader;
 use MakinaCorpus\CoreBus\EventBus\EventBus;
@@ -55,7 +56,7 @@ final class EventStoreEventBusDecorator implements EventBus
      */
     public function notifyEvent(object $event): void
     {
-        if ($this->attributeLoader->classHas($event, NoStore::class)) {
+        if ($this->attributeLoader->classHas($event, [NoStore::class, CommandAsEvent::class])) {
             $this->decorated->notifyEvent($event);
 
             return;

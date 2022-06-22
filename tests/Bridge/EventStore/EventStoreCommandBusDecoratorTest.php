@@ -14,7 +14,7 @@ use PHPUnit\Framework\TestCase;
 
 final class EventStoreCommandBusDecoratorTest extends TestCase
 {
-    public function testCommandAsEventIsIgnored(): void
+    public function testBasicFeature(): void
     {
         $eventStore = new DummyArrayEventStore();
         $commandBus = new NullCommandBus();
@@ -29,7 +29,11 @@ final class EventStoreCommandBusDecoratorTest extends TestCase
         self::assertSame(1, $eventStore->countStored());
         self::assertSame($command, $eventStore->getStored()[0]->getMessage());
 
-        $decorator->dispatchCommand(new MockCommandAsEvent());
-        self::assertSame(1, $eventStore->countStored());
+        // When commands are event, only the internal event bus decorator
+        // will ignore it.
+        $newCommand = new MockCommandAsEvent();
+        $decorator->dispatchCommand($newCommand);
+        self::assertSame(2, $eventStore->countStored());
+        self::assertSame($newCommand, $eventStore->getStored()[1]->getMessage());
     }
 }

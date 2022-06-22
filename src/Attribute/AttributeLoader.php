@@ -11,8 +11,11 @@ final class AttributeLoader
     /**
      * Optimized faster version of loadFromClass() that does not instanciate
      * the attribute and do any iteration.
+     *
+     * @param string|string[] $attributeName
+     *   If an array, return true if any of the attributes exists.
      */
-    public function classHas(/* string|object */ $className, string $attributeName): bool
+    public function classHas(/* string|object */ $className, $attributeName): bool
     {
         $className = \is_object($className) ? \get_class($className) : $className;
 
@@ -20,6 +23,16 @@ final class AttributeLoader
             $reflectionClass = new \ReflectionClass($className);
         } catch (\ReflectionException $e) {
             throw new AttributeError("Class does not exists: " . $className, 0, $e);
+        }
+
+        if (\is_array($attributeName)) {
+            foreach ($attributeName as $name) {
+                if (!empty($reflectionClass->getAttributes($name))) {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         return !empty($reflectionClass->getAttributes($attributeName));
