@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace MakinaCorpus\CoreBus\Implementation\CommandBus;
 
+use MakinaCorpus\CoreBus\Attr\CommandAsEvent;
 use MakinaCorpus\CoreBus\Attr\NoTransaction;
 use MakinaCorpus\CoreBus\Attribute\AttributeLoader;
 use MakinaCorpus\CoreBus\CommandBus\CommandBus;
@@ -39,6 +40,7 @@ final class TransactionalCommandBus implements SynchronousCommandBus, EventBus, 
 {
     use LoggerAwareTrait;
 
+    private AttributeLoader $attributeLoader;
     private CommandBus $commandBus;
     private EventBus $internalEventBus;
     private EventBus $externalEventBus;
@@ -53,6 +55,7 @@ final class TransactionalCommandBus implements SynchronousCommandBus, EventBus, 
         EventBufferManager $eventBufferManager,
         TransactionManager $transactionManager
     ) {
+        $this->attributeLoader = new AttributeLoader();
         $this->commandBus = $commandBus;
         $this->internalEventBus = $internalEventBus;
         $this->externalEventBus = $externalEventBus;
@@ -86,21 +89,21 @@ final class TransactionalCommandBus implements SynchronousCommandBus, EventBus, 
                 $message = $command;
             }
 
-            $disableTransaction = (!$multiple) && (new AttributeLoader())->loadFromClass($message)->has(NoTransaction::class);
+            $disableTransaction = (!$multiple) && $this->attributeLoader->classHas($message, NoTransaction::class);
 
             if ($disableTransaction) {
-                $this->logger->notice("TransactionalCommandBus: Running {command} without transaction.", ['command' => \get_class($command)]);
-                $response = $this->commandBus->dispatchCommand($command);
+                $this->logger->notice("TransactionalCommandBus: Running {command} without transaction.", ['command' => \get_class($message)]);
+                $response = $this->dispatch($command);
             } else {
                 $transaction = $this->transactionManager->start();
 
                 if ($multiple) {
                     foreach ($command as $child) {
                         $count++;
-                        $response = $this->commandBus->dispatchCommand($child);
+                        $response = $this->dispatch($child);
                     }
                 } else {
-                    $response = $this->commandBus->dispatchCommand($command);
+                    $response = $this->dispatch($command);
                 }
 
                 $transaction->commit();
@@ -143,6 +146,26 @@ final class TransactionalCommandBus implements SynchronousCommandBus, EventBus, 
 
         $this->internalEventBus->notifyEvent($event);
         $this->buffer->add($event);
+    }
+
+    /**
+     * Really dispatch command.
+     */
+    private function dispatch(object $command): CommandResponsePromise
+    {
+        $response = $this->commandBus->dispatchCommand($command);
+
+        if ($command instanceof Envelope) {
+            $message = $command->getMessage();
+        } else {
+            $message = $command;
+        }
+
+        if ($this->attributeLoader->classHas($message, CommandAsEvent::class)) {
+            $this->notifyEvent($message);
+        }
+
+        return $response;
     }
 
     /**

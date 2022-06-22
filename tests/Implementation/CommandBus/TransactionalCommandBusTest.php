@@ -16,6 +16,7 @@ use MakinaCorpus\CoreBus\Implementation\EventBus\ArrayEventBufferManager;
 use MakinaCorpus\CoreBus\Implementation\Transaction\Transaction;
 use MakinaCorpus\CoreBus\Implementation\Transaction\TransactionManager;
 use MakinaCorpus\CoreBus\Tests\Implementation\Mock\MockCommandA;
+use MakinaCorpus\CoreBus\Tests\Implementation\Mock\MockCommandAsEvent;
 use MakinaCorpus\CoreBus\Tests\Implementation\Mock\MockCommandB;
 use MakinaCorpus\CoreBus\Tests\Implementation\Mock\MockCommandC;
 use MakinaCorpus\CoreBus\Tests\Implementation\Mock\MockCommandNoTransaction;
@@ -118,6 +119,52 @@ final class TransactionalCommandBusTest extends TestCase
 
         self::expectExceptionMessage('No transaction is set or was done.');
         $transactionManager->getCurrentTransaction();
+    }
+
+    public function testCommandAsEvent(): void
+    {
+        $internalCommandBus = new TransactionalCommandBusTestCommandBus();
+        $externalEventBus = new MockEventBus();
+        $internalEventBus = new MockEventBus();
+
+        $transactionManager = new TestingTransactionManager();
+
+        $commandBus = $this->createCommandBus(
+            $internalCommandBus,
+            $internalEventBus,
+            $externalEventBus,
+            $transactionManager
+        );
+        $internalCommandBus->setEventBus($commandBus);
+
+        $command = new MockCommandAsEvent();
+        $commandBus->dispatchCommand($command);
+
+        self::assertContains($command, $externalEventBus->events);
+        self::assertContains($command, $internalEventBus->events);
+    }
+
+    public function testCommandAsEventNot(): void
+    {
+        $internalCommandBus = new TransactionalCommandBusTestCommandBus();
+        $externalEventBus = new MockEventBus();
+        $internalEventBus = new MockEventBus();
+
+        $transactionManager = new TestingTransactionManager();
+
+        $commandBus = $this->createCommandBus(
+            $internalCommandBus,
+            $internalEventBus,
+            $externalEventBus,
+            $transactionManager
+        );
+        $internalCommandBus->setEventBus($commandBus);
+
+        $command = new MockCommandA();
+        $commandBus->dispatchCommand($command);
+
+        self::assertNotContains($command, $externalEventBus->events);
+        self::assertNotContains($command, $internalEventBus->events);
     }
 
     public function testMultiCommand(): void
@@ -266,6 +313,10 @@ final class TransactionalCommandBusTestCommandBus implements CommandBus
             $this->getEventBus()->notifyEvent(new MockEventB());
             $this->getEventBus()->notifyEvent(new MockEventC());
 
+            return SynchronousCommandResponsePromise::success(new MockResponse($command));
+        }
+
+        if ($command instanceof MockCommandAsEvent) {
             return SynchronousCommandResponsePromise::success(new MockResponse($command));
         }
 

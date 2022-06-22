@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace MakinaCorpus\CoreBus\Tests\Attribute\Loader;
 
+use MakinaCorpus\CoreBus\Attr\Async;
 use MakinaCorpus\CoreBus\Attribute\Attribute;
 use MakinaCorpus\CoreBus\Attribute\AttributeLoader;
 use MakinaCorpus\CoreBus\Attribute\Error\AttributeError;
@@ -11,6 +12,14 @@ use PHPUnit\Framework\TestCase;
 
 class AttributeLoaderTest extends TestCase
 {
+    public function testClassHas(): void
+    {
+        $loader = $this->createAttributeLoader();
+
+        self::assertTrue($loader->classHas(AttributeLoaderMock::class, Async::class));
+        self::assertTrue($loader->classHas(new AttributeLoaderMock(), Async::class));
+    }
+
     public function testLoadFromClass(): void
     {
         $loader = $this->createAttributeLoader();

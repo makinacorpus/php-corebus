@@ -4,6 +4,7 @@ declare (strict_types=1);
 
 namespace MakinaCorpus\CoreBus\Bridge\EventStore;
 
+use MakinaCorpus\CoreBus\Attr\CommandAsEvent;
 use MakinaCorpus\CoreBus\Attr\NoStore;
 use MakinaCorpus\CoreBus\Attribute\AttributeLoader;
 use MakinaCorpus\CoreBus\CommandBus\CommandResponsePromise;
@@ -22,6 +23,7 @@ use MakinaCorpus\Message\Envelope;
  */
 final class EventStoreCommandBusDecorator implements SynchronousCommandBus
 {
+    private AttributeLoader $attributeLoader;
     private SynchronousCommandBus $decorated;
     private EventStore $eventStore;
     private EventInfoExtrator $eventInfoExtractor;
@@ -33,6 +35,7 @@ final class EventStoreCommandBusDecorator implements SynchronousCommandBus
         EventInfoExtrator $eventInfoExtractor,
         ?RuntimePlayer $runtimePlayer = null
     ) {
+        $this->attributeLoader = new AttributeLoader();
         $this->decorated = $decorated;
         $this->eventInfoExtractor = $eventInfoExtractor;
         $this->eventStore = $eventStore;
@@ -44,36 +47,45 @@ final class EventStoreCommandBusDecorator implements SynchronousCommandBus
      */
     public function dispatchCommand(object $command): CommandResponsePromise
     {
-        $eventInfo = new EventInfo();
-        $this->eventInfoExtractor->extract($command, $eventInfo);
-
-        if ((new AttributeLoader())->loadFromClass($command)->has(NoStore::class)) {
+        if ($this->attributeLoader->classHas($command, NoStore::class)) {
             return $this->decorated->dispatchCommand($command);
         }
 
-        if ($command instanceof Envelope) {
-            $commandMessage = $command->getMessage();
-            $commandProperties = $command->getProperties();
-        } else {
-            $commandMessage = $command;
-            $commandProperties = [];
-        }
+        $storedEvent = null;
 
-        $storedEvent = $this
-            ->eventStore
-            ->append($commandMessage)
-            ->aggregate(
-                $eventInfo->getAggregateType(),
-                $eventInfo->getAggregateId()
-            )
-            ->properties(
-                $commandProperties
-            )
-            ->properties(
-                $eventInfo->getProperties()
-            )
-            ->execute()
-        ;
+        // If a transaction went OK, but the command was marked to be
+        // notified as being an domain event, we must not store it,
+        // otherwise we will have a duplicate in the event stream.
+        $commandAsEvent = $this->attributeLoader->classHas($command, CommandAsEvent::class);
+
+        if (!$commandAsEvent) {
+            $eventInfo = new EventInfo();
+            $this->eventInfoExtractor->extract($command, $eventInfo);
+
+            if ($command instanceof Envelope) {
+                $commandMessage = $command->getMessage();
+                $commandProperties = $command->getProperties();
+            } else {
+                $commandMessage = $command;
+                $commandProperties = [];
+            }
+
+            $storedEvent = $this
+                ->eventStore
+                ->append($commandMessage)
+                ->aggregate(
+                    $eventInfo->getAggregateType(),
+                    $eventInfo->getAggregateId()
+                )
+                ->properties(
+                    $commandProperties
+                )
+                ->properties(
+                    $eventInfo->getProperties()
+                )
+                ->execute()
+            ;
+        }
 
         try {
             $ret = $this->decorated->dispatchCommand($command);
@@ -85,11 +97,16 @@ final class EventStoreCommandBusDecorator implements SynchronousCommandBus
             return $ret;
 
         } catch (\Throwable $e) {
-            $this
-                ->eventStore
-                ->failedWith($storedEvent, $e)
-                ->execute()
-            ;
+            // @todo If the command was stored by the internal event bus
+            //   instead (command as event) we don't have its reference here
+            //   to store its failure status.
+            if ($storedEvent) {
+                $this
+                    ->eventStore
+                    ->failedWith($storedEvent, $e)
+                    ->execute()
+                ;
+            }
 
             throw $e;
         }

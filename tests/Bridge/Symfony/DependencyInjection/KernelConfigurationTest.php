@@ -6,12 +6,12 @@ namespace MakinaCorpus\CoreBus\Tests\Bridge\Symfony\DependencyInjection;
 
 use Goat\Query\Symfony\GoatQueryBundle;
 use MakinaCorpus\CoreBus\Bridge\EventStore\EventStoreEventBusDecorator;
+use MakinaCorpus\CoreBus\Bridge\Symfony\Command\CommandPushCommand;
+use MakinaCorpus\CoreBus\Bridge\Symfony\Command\CommandWorkerCommand;
 use MakinaCorpus\CoreBus\Bridge\Symfony\DependencyInjection\CoreBusExtension;
 use MakinaCorpus\CoreBus\CommandBus\CommandBus;
 use MakinaCorpus\CoreBus\CommandBus\SynchronousCommandBus;
 use MakinaCorpus\CoreBus\EventBus\EventBus;
-use MakinaCorpus\CoreBus\Tests\Bridge\Symfony\Command\CommandPushCommand;
-use MakinaCorpus\CoreBus\Tests\Bridge\Symfony\Command\CommandWorkerCommand;
 use MakinaCorpus\EventStore\EventStore;
 use MakinaCorpus\EventStore\Bridge\Symfony\EventStoreBundle;
 use MakinaCorpus\MessageBroker\MessageBroker;

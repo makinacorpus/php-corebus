@@ -10,7 +10,7 @@ namespace MakinaCorpus\CoreBus\Tests\Attribute\Loader;
 #[\MakinaCorpus\CoreBus\Attr\Aggregate("foo", AttributeLoaderMock::class)]
 #[\MakinaCorpus\CoreBus\Attr\Async]
 #[\MakinaCorpus\CoreBus\Attr\Retry(10)]
-abstract class AttributeLoaderMock
+class AttributeLoaderMock
 {
     #[\MakinaCorpus\CoreBus\Attr\Aggregate("foo", AttributeLoaderMock::class)]
     #[\MakinaCorpus\CoreBus\Attr\Async]
@@ -22,8 +22,6 @@ abstract class AttributeLoaderMock
     protected function protectedMethod(): void
     {
     }
-
-    abstract public function abstractMethod(): void;
 }
 
 /**

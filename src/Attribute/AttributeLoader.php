@@ -9,6 +9,23 @@ use MakinaCorpus\CoreBus\Attribute\Error\AttributeError;
 final class AttributeLoader
 {
     /**
+     * Optimized faster version of loadFromClass() that does not instanciate
+     * the attribute and do any iteration.
+     */
+    public function classHas(/* string|object */ $className, string $attributeName): bool
+    {
+        $className = \is_object($className) ? \get_class($className) : $className;
+
+        try {
+            $reflectionClass = new \ReflectionClass($className);
+        } catch (\ReflectionException $e) {
+            throw new AttributeError("Class does not exists: " . $className, 0, $e);
+        }
+
+        return !empty($reflectionClass->getAttributes($attributeName));
+    }
+
+    /**
      * {@inheritdoc}
      */
     public function loadFromClass(/* string|object */ $className): AttributeList

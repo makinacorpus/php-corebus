@@ -31,6 +31,7 @@ use MakinaCorpus\EventStore\Projector\Runtime\RuntimePlayer;
  */
 final class EventStoreEventBusDecorator implements EventBus
 {
+    private AttributeLoader $attributeLoader;
     private EventBus $decorated;
     private EventStore $eventStore;
     private EventInfoExtrator $eventInfoExtractor;
@@ -42,6 +43,7 @@ final class EventStoreEventBusDecorator implements EventBus
         EventInfoExtrator $eventInfoExtractor,
         ?RuntimePlayer $runtimePlayer = null
     ) {
+        $this->attributeLoader = new AttributeLoader();
         $this->decorated = $decorated;
         $this->eventInfoExtractor = $eventInfoExtractor;
         $this->eventStore = $eventStore;
@@ -53,14 +55,14 @@ final class EventStoreEventBusDecorator implements EventBus
      */
     public function notifyEvent(object $event): void
     {
-        $eventInfo = new EventInfo();
-        $this->eventInfoExtractor->extract($event, $eventInfo);
-
-        if ((new AttributeLoader())->loadFromClass($event)->has(NoStore::class)) {
+        if ($this->attributeLoader->classHas($event, NoStore::class)) {
             $this->decorated->notifyEvent($event);
 
             return;
         }
+
+        $eventInfo = new EventInfo();
+        $this->eventInfoExtractor->extract($event, $eventInfo);
 
         $storedEvent = $this
             ->eventStore

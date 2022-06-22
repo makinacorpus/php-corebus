@@ -9,12 +9,19 @@ use MakinaCorpus\CoreBus\Attribute\AttributeLoader;
 
 final class AttributeEventInfoExtrator implements EventInfoExtrator
 {
+    private AttributeLoader $attributeLoader;
+
+    public function __construct()
+    {
+        $this->attributeLoader = new AttributeLoader();
+    }
+
     /**
      * {@inheritdoc}
      */
     public function extract(object $event, EventInfo $eventInfo): void
     {
-        $attribute = (new AttributeLoader())->loadFromClass($event)->first(Aggregate::class);
+        $attribute = $this->attributeLoader->loadFromClass($event)->first(Aggregate::class);
 
         if ($attribute) {
             \assert($attribute instanceof Aggregate);
