@@ -20,6 +20,11 @@ services:
         class: MakinaCorpus\CoreBus\Bridge\EventStore\AttributeEventInfoExtrator
         tags: ['app.event_info']
 
+    corebus.event_store_info_extractor.legacy:
+        public: false
+        class: MakinaCorpus\CoreBus\Bridge\EventStore\LegacyAggregateEventInfoExtrator
+        tags: ['app.event_info']
+
     corebus.event_store_info_extractor:
         public: false
         class: MakinaCorpus\CoreBus\Bridge\EventStore\EventInfoExtratorChain
