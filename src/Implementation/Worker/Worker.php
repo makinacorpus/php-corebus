@@ -75,6 +75,8 @@ final class Worker implements LoggerAwareInterface
                     $this->logger->critical('Error happened during processing message: {exception}', ['exception' => $e]);
                 }
 
+                $this->messageBroker->reject($message, $e);
+
                 // This is by design, dispatcher if correctly setup will handle
                 // retry and reject by itself. This worker only functionnality
                 // is about receiving a message and sending it to domain for
