@@ -4,36 +4,31 @@ declare(strict_types=1);
 
 namespace MakinaCorpus\CoreBus\Tests\Implementation\Worker;
 
+use MakinaCorpus\CoreBus\CommandBus\CommandConsumer;
 use MakinaCorpus\CoreBus\CommandBus\CommandResponsePromise;
-use MakinaCorpus\CoreBus\CommandBus\SynchronousCommandBus;
 use MakinaCorpus\CoreBus\Implementation\Worker\Worker;
 use MakinaCorpus\CoreBus\Implementation\Worker\WorkerEvent;
 use MakinaCorpus\Message\Envelope;
-use MakinaCorpus\MessageBroker\MessageBroker;
+use MakinaCorpus\MessageBroker\MessageConsumer;
 use PHPUnit\Framework\TestCase;
 
 final class WorkerTest extends TestCase
 {
     public function testIdleWillStop(): void
     {
-        $dispatcher = new class implements SynchronousCommandBus
+        $commandConsumer = new class implements CommandConsumer
         {
-            public function dispatchCommand(object $command): CommandResponsePromise
+            public function consumeCommand(object $command): CommandResponsePromise
             {
                 throw new \DomainException("I am the expected error.");
             }
         };
 
-        $messageBroker = new class implements MessageBroker
+        $messageConsumer = new class implements MessageConsumer
         {
             public function get(): ?Envelope
             {
                 return null;
-            }
-
-            public function dispatch(Envelope $envelope): void
-            {
-                throw new \BadMethodCallException("I shall not be called.");
             }
 
             public function ack(Envelope $envelope): void
@@ -47,7 +42,7 @@ final class WorkerTest extends TestCase
             }
         };
 
-        $worker = new Worker($dispatcher, $messageBroker);
+        $worker = new Worker($commandConsumer, $messageConsumer);
 
         $hasIdled = false;
         $eventDispatcher = $worker->getEventDispatcher();
@@ -71,24 +66,21 @@ final class WorkerTest extends TestCase
 
     public function testIsResilientToError(): void
     {
-        $commandBus = new class implements SynchronousCommandBus
+        $commandConsumer = new class implements CommandConsumer
         {
-            public function dispatchCommand(object $command): CommandResponsePromise
+            public function consumeCommand(object $command): CommandResponsePromise
             {
                 throw new \DomainException("I am the expected error.");
             }
         };
 
-        $messageBroker = new class implements MessageBroker
+        $messageConsumer = new class implements MessageConsumer
         {
+            private int $rejectCallCount = 0;
+
             public function get(): ?Envelope
             {
                 return Envelope::wrap(new \DateTime());
-            }
-
-            public function dispatch(Envelope $envelope): void
-            {
-                throw new \BadMethodCallException("I shall not be called.");
             }
 
             public function ack(Envelope $envelope): void
@@ -98,11 +90,16 @@ final class WorkerTest extends TestCase
 
             public function reject(Envelope $envelope, ?\Throwable $exception = null): void
             {
-                throw new \BadMethodCallException("I shall not be called.");
+                $this->rejectCallCount++;
+            }
+
+            public function getRejectCallCount(): int
+            {
+                return $this->rejectCallCount;
             }
         };
 
-        $worker = new Worker($commandBus, $messageBroker);
+        $worker = new Worker($commandConsumer, $messageConsumer);
 
         $caught = false;
         $eventDispatcher = $worker->getEventDispatcher();
@@ -126,10 +123,12 @@ final class WorkerTest extends TestCase
             )
         ;
 
+        self::assertSame(0, $messageConsumer->getRejectCallCount());
         self::assertFalse($caught);
 
         $worker->run();
 
+        self::assertSame(1, $messageConsumer->getRejectCallCount());
         self::assertTrue($caught);
     }
 }

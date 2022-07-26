@@ -4,11 +4,11 @@ declare (strict_types=1);
 
 namespace MakinaCorpus\CoreBus\Implementation\RetryStrategy;
 
+use MakinaCorpus\CoreBus\CommandBus\CommandConsumer;
 use MakinaCorpus\CoreBus\CommandBus\CommandResponsePromise;
-use MakinaCorpus\CoreBus\CommandBus\SynchronousCommandBus;
 use MakinaCorpus\Message\Envelope;
 use MakinaCorpus\Message\Property;
-use MakinaCorpus\MessageBroker\MessageBroker;
+use MakinaCorpus\MessageBroker\MessageConsumer;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\NullLogger;
@@ -17,34 +17,34 @@ use Psr\Log\NullLogger;
  * From our command bus interface, catch messages and send them into
  * makinacorpus/message-broker message broker instead.
  */
-final class RetryStrategyCommandBusDecorator implements SynchronousCommandBus, LoggerAwareInterface
+final class RetryStrategyCommandConsumerDecorator implements CommandConsumer, LoggerAwareInterface
 {
     use LoggerAwareTrait;
 
-    private SynchronousCommandBus $decorated;
+    private CommandConsumer $decorated;
     private RetryStrategy $retryStrategy;
-    private MessageBroker $messageBroker;
+    private MessageConsumer $messageConsumer;
 
-    public function __construct(SynchronousCommandBus $decorated, RetryStrategy $retryStrategy, MessageBroker $messageBroker)
+    public function __construct(CommandConsumer $decorated, RetryStrategy $retryStrategy, MessageConsumer $messageConsumer)
     {
         $this->decorated = $decorated;
         $this->retryStrategy = $retryStrategy;
-        $this->messageBroker = $messageBroker;
+        $this->messageConsumer = $messageConsumer;
         $this->logger = new NullLogger();
     }
 
     /**
      * {@inheritdoc}
      */
-    public function dispatchCommand(object $command): CommandResponsePromise
+    public function consumeCommand(object $command): CommandResponsePromise
     {
         $envelope = Envelope::wrap($command);
 
         try {
-            return $this->decorated->dispatchCommand($envelope);
+            return $this->decorated->consumeCommand($envelope);
         } catch (\Throwable $e) {
             if ($envelope->hasProperty(Property::RETRY_KILLSWITCH)) {
-                $this->logger->debug("RetryStrategyCommandBusDecorator: Failure will not be retried, killed by killswitch.", ['exception' => $e]);
+                $this->logger->debug("RetryStrategyCommandConsumerDecorator: Failure will not be retried, killed by killswitch.", ['exception' => $e]);
 
                 throw $e;
             }
@@ -52,11 +52,11 @@ final class RetryStrategyCommandBusDecorator implements SynchronousCommandBus, L
             $response = $this->retryStrategy->shouldRetry($envelope, $e);
 
             if ($response->shouldRetry()) {
-                $this->logger->debug("RetryStrategyCommandBusDecorator: Failure is retryable.", ['exception' => $e]);
+                $this->logger->debug("RetryStrategyCommandConsumerDecorator: Failure is retryable.", ['exception' => $e]);
 
                 $this->doRequeue($envelope, $response, $e);
             } else {
-                $this->logger->debug("RetryStrategyCommandBusDecorator: Failure is not retryable.", ['exception' => $e]);
+                $this->logger->debug("RetryStrategyCommandConsumerDecorator: Failure is not retryable.", ['exception' => $e]);
 
                 $this->doReject($envelope, $e);
             }
@@ -81,7 +81,7 @@ final class RetryStrategyCommandBusDecorator implements SynchronousCommandBus, L
         }
 
         // Arbitrary delai. Yes, very arbitrary.
-        $this->messageBroker->reject(
+        $this->messageConsumer->reject(
             $envelope->withProperties([
                 Property::RETRY_COUNT => $count + 1,
                 Property::RETRY_DELAI => $delay * ($count + 1),
@@ -99,7 +99,7 @@ final class RetryStrategyCommandBusDecorator implements SynchronousCommandBus, L
     {
         // Rest all routing information, so that the broker will not take
         // those into account if some were remaining.
-        $this->messageBroker->reject(
+        $this->messageConsumer->reject(
             $envelope->withProperties([
                 Property::RETRY_COUNT => null,
                 Property::RETRY_DELAI => null,

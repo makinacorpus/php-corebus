@@ -7,9 +7,8 @@ namespace MakinaCorpus\CoreBus\Implementation\CommandBus;
 use MakinaCorpus\CoreBus\Attr\CommandAsEvent;
 use MakinaCorpus\CoreBus\Attr\NoTransaction;
 use MakinaCorpus\CoreBus\Attribute\AttributeLoader;
-use MakinaCorpus\CoreBus\CommandBus\CommandBus;
+use MakinaCorpus\CoreBus\CommandBus\CommandConsumer;
 use MakinaCorpus\CoreBus\CommandBus\CommandResponsePromise;
-use MakinaCorpus\CoreBus\CommandBus\SynchronousCommandBus;
 use MakinaCorpus\CoreBus\CommandBus\Transaction\MultiCommand;
 use MakinaCorpus\CoreBus\EventBus\EventBus;
 use MakinaCorpus\CoreBus\Implementation\EventBus\EventBuffer;
@@ -36,12 +35,12 @@ use Psr\Log\NullLogger;
  * @todo
  *   Should we disable it as well and let event pass no matter what?
  */
-final class TransactionalCommandBus implements SynchronousCommandBus, EventBus, LoggerAwareInterface
+final class TransactionalCommandConsumer implements CommandConsumer, EventBus, LoggerAwareInterface
 {
     use LoggerAwareTrait;
 
     private AttributeLoader $attributeLoader;
-    private CommandBus $commandBus;
+    private CommandConsumer $decorated;
     private EventBus $internalEventBus;
     private EventBus $externalEventBus;
     private EventBufferManager $eventBufferManager;
@@ -49,14 +48,14 @@ final class TransactionalCommandBus implements SynchronousCommandBus, EventBus, 
     private ?EventBuffer $buffer = null;
 
     public function __construct(
-        CommandBus $commandBus,
+        CommandConsumer $decorated,
         EventBus $internalEventBus,
         EventBus $externalEventBus,
         EventBufferManager $eventBufferManager,
         TransactionManager $transactionManager
     ) {
         $this->attributeLoader = new AttributeLoader();
-        $this->commandBus = $commandBus;
+        $this->decorated = $decorated;
         $this->internalEventBus = $internalEventBus;
         $this->externalEventBus = $externalEventBus;
         $this->eventBufferManager = $eventBufferManager;
@@ -67,14 +66,14 @@ final class TransactionalCommandBus implements SynchronousCommandBus, EventBus, 
     /**
      * {@inheritdoc}
      */
-    public function dispatchCommand(object $command): CommandResponsePromise
+    public function consumeCommand(object $command): CommandResponsePromise
     {
         $transaction = null;
 
         $this->buffer = $this->eventBufferManager->start();
 
         if ($multiple = $command instanceof MultiCommand) {
-            $this->logger->notice("TransactionalCommandBus: Running {command} multi-command transaction.", ['command' => \get_class($command)]);
+            $this->logger->notice("TransactionalCommandConsumer: Running {command} multi-command transaction.", ['command' => \get_class($command)]);
             $count = 0;
             $total = $command->count();
         } else {
@@ -92,18 +91,18 @@ final class TransactionalCommandBus implements SynchronousCommandBus, EventBus, 
             $disableTransaction = (!$multiple) && $this->attributeLoader->classHas($message, NoTransaction::class);
 
             if ($disableTransaction) {
-                $this->logger->notice("TransactionalCommandBus: Running {command} without transaction.", ['command' => \get_class($message)]);
-                $response = $this->dispatch($command);
+                $this->logger->notice("TransactionalCommandConsumer: Running {command} without transaction.", ['command' => \get_class($message)]);
+                $response = $this->doConsumeCommand($command);
             } else {
                 $transaction = $this->transactionManager->start();
 
                 if ($multiple) {
                     foreach ($command as $child) {
                         $count++;
-                        $response = $this->dispatch($child);
+                        $response = $this->doConsumeCommand($child);
                     }
                 } else {
-                    $response = $this->dispatch($command);
+                    $response = $this->doConsumeCommand($command);
                 }
 
                 $transaction->commit();
@@ -138,22 +137,21 @@ final class TransactionalCommandBus implements SynchronousCommandBus, EventBus, 
     public function notifyEvent(object $event): void
     {
         if (!$this->buffer) {
-            $this->logger->error("TransactionalCommandBus: Receiving an event oustide of transaction, forwading.");
+            $this->logger->debug("TransactionalCommandConsumer: Receiving an event oustide of transaction, forwading.");
             $this->internalEventBus->notifyEvent($event);
-
-            return;
+        } else {
+            $this->logger->debug("TransactionalCommandConsumer: Receiving an event inside of transaction, buffering.");
+            $this->internalEventBus->notifyEvent($event);
+            $this->buffer->add($event);
         }
-
-        $this->internalEventBus->notifyEvent($event);
-        $this->buffer->add($event);
     }
 
     /**
-     * Really dispatch command.
+     * Really consume command.
      */
-    private function dispatch(object $command): CommandResponsePromise
+    private function doConsumeCommand(object $command): CommandResponsePromise
     {
-        $response = $this->commandBus->dispatchCommand($command);
+        $response = $this->decorated->consumeCommand($command);
 
         if ($command instanceof Envelope) {
             $message = $command->getMessage();
@@ -173,7 +171,7 @@ final class TransactionalCommandBus implements SynchronousCommandBus, EventBus, 
      */
     private function discard(): void
     {
-        $this->logger->error("TransactionalCommandBus: Discarded {count} events.", ['count' => \count($this->buffer)]);
+        $this->logger->error("TransactionalCommandConsumer: Discarded {count} events.", ['count' => \count($this->buffer)]);
 
         $this->buffer->discard();
         $this->buffer = null;
@@ -184,7 +182,7 @@ final class TransactionalCommandBus implements SynchronousCommandBus, EventBus, 
      */
     private function flush(): void
     {
-        $this->logger->debug("TransactionalCommandBus: Will flush {count} events.", ['count' => \count($this->buffer)]);
+        $this->logger->debug("TransactionalCommandConsumer: Will flush {count} events.", ['count' => \count($this->buffer)]);
 
         $errors = 0;
         $total = 0;
@@ -195,11 +193,11 @@ final class TransactionalCommandBus implements SynchronousCommandBus, EventBus, 
                 $this->externalEventBus->notifyEvent($event);
             } catch (\Throwable $e) {
                 ++$errors;
-                $this->logger->error("TransactionalCommandBus: Error while event '{event}' flush.", ['event' => $event]);
+                $this->logger->error("TransactionalCommandConsumer: Error while event '{event}' flush.", ['event' => $event]);
             }
         }
         $this->buffer = null;
 
-        $this->logger->debug("TransactionalCommandBus: Flushed {total} events, {error} errors.", ['total' => $total, 'error' => $errors]);
+        $this->logger->debug("TransactionalCommandConsumer: Flushed {total} events, {error} errors.", ['total' => $total, 'error' => $errors]);
     }
 }

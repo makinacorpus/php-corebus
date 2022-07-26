@@ -6,8 +6,8 @@ namespace MakinaCorpus\CoreBus\Bridge\EventStore;
 
 use MakinaCorpus\CoreBus\Attr\NoStore;
 use MakinaCorpus\CoreBus\Attribute\AttributeLoader;
+use MakinaCorpus\CoreBus\CommandBus\CommandConsumer;
 use MakinaCorpus\CoreBus\CommandBus\CommandResponsePromise;
-use MakinaCorpus\CoreBus\CommandBus\SynchronousCommandBus;
 use MakinaCorpus\EventStore\EventStore;
 use MakinaCorpus\EventStore\Projector\Runtime\RuntimePlayer;
 use MakinaCorpus\Message\Envelope;
@@ -20,16 +20,16 @@ use MakinaCorpus\Message\Envelope;
  *
  * This can only work on synchronous command bus.
  */
-final class EventStoreCommandBusDecorator implements SynchronousCommandBus
+final class EventStoreCommandConsumerDecorator implements CommandConsumer
 {
     private AttributeLoader $attributeLoader;
-    private SynchronousCommandBus $decorated;
+    private CommandConsumer $decorated;
     private EventStore $eventStore;
     private EventInfoExtrator $eventInfoExtractor;
     private ?RuntimePlayer $runtimePlayer = null;
 
     public function __construct(
-        SynchronousCommandBus $decorated,
+        CommandConsumer $decorated,
         EventStore $eventStore,
         EventInfoExtrator $eventInfoExtractor,
         ?RuntimePlayer $runtimePlayer = null
@@ -44,10 +44,10 @@ final class EventStoreCommandBusDecorator implements SynchronousCommandBus
     /**
      * {@inheritdoc}
      */
-    public function dispatchCommand(object $command): CommandResponsePromise
+    public function consumeCommand(object $command): CommandResponsePromise
     {
         if ($this->attributeLoader->classHas($command, NoStore::class)) {
-            return $this->decorated->dispatchCommand($command);
+            return $this->decorated->consumeCommand($command);
         }
 
         $eventInfo = new EventInfo();
@@ -78,7 +78,7 @@ final class EventStoreCommandBusDecorator implements SynchronousCommandBus
         ;
 
         try {
-            $ret = $this->decorated->dispatchCommand($command);
+            $ret = $this->decorated->consumeCommand($command);
 
             // If a transaction went OK, but the command was marked to be
             // notified as being an domain event, we must not store it,

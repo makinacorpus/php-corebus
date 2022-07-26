@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace MakinaCorpus\CoreBus\Bridge\Symfony\Command;
 
-use MakinaCorpus\CoreBus\CommandBus\SynchronousCommandBus;
+use MakinaCorpus\CoreBus\CommandBus\CommandConsumer;
 use MakinaCorpus\CoreBus\Implementation\Worker\Worker;
 use MakinaCorpus\CoreBus\Implementation\Worker\WorkerEvent;
 use MakinaCorpus\Message\Envelope;
-use MakinaCorpus\MessageBroker\MessageBroker;
+use MakinaCorpus\MessageBroker\MessageConsumerFactory;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Exception\InvalidArgumentException;
 use Symfony\Component\Console\Input\InputInterface;
@@ -22,15 +22,15 @@ final class CommandWorkerCommand extends Command
 {
     protected static $defaultName = 'corebus:worker';
 
-    private SynchronousCommandBus $commandBus;
-    private ?MessageBroker $messageBroker;
+    private CommandConsumer $commandConsumer;
+    private ?MessageConsumerFactory $messageConsumerFactory;
 
-    public function __construct(SynchronousCommandBus $commandBus, ?MessageBroker $messageBroker = null)
+    public function __construct(CommandConsumer $commandConsumer, ?MessageConsumerFactory $messageConsumerFactory = null)
     {
         parent::__construct();
 
-        $this->commandBus = $commandBus;
-        $this->messageBroker = $messageBroker;
+        $this->commandConsumer = $commandConsumer;
+        $this->messageConsumerFactory = $messageConsumerFactory;
     }
 
     /**
@@ -52,7 +52,7 @@ final class CommandWorkerCommand extends Command
      */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        if (!$this->messageBroker) {
+        if (!$this->messageConsumerFactory) {
             $output->writeln("<error>This command can only work if 'corebus.command_bus.adapter' is 'message_broker'.");
         }
 
@@ -62,7 +62,8 @@ final class CommandWorkerCommand extends Command
         $timeLimit = self::parseTime($input->getOption('time-limit'));
         $eventCountLimit = (int) $input->getOption('limit');
 
-        $worker = new Worker($this->commandBus, $this->messageBroker, null, $eventCountLimit);
+        // @todo Here, handle attached queues.
+        $worker = new Worker($this->commandConsumer, $this->messageConsumerFactory->createConsumer(), null, $eventCountLimit);
 
         $handleTick = static function () use ($worker, $startedTimestamp, $memoryLimit, $timeLimit, $output) {
             if ($memoryLimit && $memoryLimit <= \memory_get_usage(true)) {

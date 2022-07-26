@@ -55,7 +55,22 @@ services:
         alias: corebus.event.bus.null
 
     #
-    # Command bus and command handler locator.
+    # Command buses.
+    #
+
+    corebus.command.bus.passthrough:
+        class: MakinaCorpus\CoreBus\Implementation\CommandBus\PassthroughCommandBus
+        arguments:
+            - "@corebus.command.consumer"
+
+    corebus.command.bus.asynchronous:
+        alias: corebus.command.bus.passthrough
+
+    corebus.command.bus.synchronous:
+        alias: corebus.command.bus.passthrough
+
+    #
+    # Command consumer and command handler locator.
     #
 
     corebus.command.handler.locator.container:
@@ -66,32 +81,32 @@ services:
     corebus.command.handler_locator:
         alias: corebus.command.handler.locator.container
 
-    corebus.command.bus.memory:
-        class: MakinaCorpus\CoreBus\Implementation\CommandBus\MemoryCommandBus
+    corebus.command.consumer.default:
+        class: MakinaCorpus\CoreBus\Implementation\CommandBus\DefaultCommandConsumer
         arguments:
             - "@corebus.command.handler_locator"
 
-    corebus.bus.transactional:
-        class: MakinaCorpus\CoreBus\Implementation\CommandBus\TransactionalCommandBus
+    corebus.command.consumer.transactional:
+        class: MakinaCorpus\CoreBus\Implementation\CommandBus\TransactionalCommandConsumer
         arguments:
-            - "@corebus.command.bus.memory"
+            - "@corebus.command.consumer.default"
             - "@corebus.event.bus.internal"
             - "@corebus.event.bus.external"
             - "@corebus.event_buffer.manager"
             - "@corebus.transaction.manager"
 
-    corebus.command.bus.asynchronous:
-        alias: corebus.bus.transactional
-
-    corebus.command.bus.synchronous:
-        alias: corebus.bus.transactional
+    corebus.command.consumer:
+        alias: corebus.command.consumer.transactional
 
     #
     # Aliases to use and Symfony autowiring.
     #
 
     MakinaCorpus\CoreBus\EventBus\EventBus:
-        alias: corebus.bus.transactional
+        alias: corebus.command.consumer.transactional
+
+    MakinaCorpus\CoreBus\CommandBus\CommandConsumer:
+        alias: corebus.command.consumer
 
     MakinaCorpus\CoreBus\CommandBus\CommandBus:
         alias: corebus.command.bus.asynchronous

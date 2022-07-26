@@ -8,19 +8,19 @@ use MakinaCorpus\CoreBus\CommandBus\CommandBus;
 use MakinaCorpus\CoreBus\CommandBus\CommandResponsePromise;
 use MakinaCorpus\CoreBus\Implementation\CommandBus\Response\NeverCommandResponsePromise;
 use MakinaCorpus\Message\Envelope;
-use MakinaCorpus\MessageBroker\MessageBroker;
+use MakinaCorpus\MessageBroker\MessagePublisher;
 
 /**
  * From our command bus interface, catch messages and send them into
  * makinacorpus/message-broker message broker instead.
  */
-final class MessageBrokerCommandBusAdapter implements CommandBus
+final class MessagePublisherCommandBusAdapter implements CommandBus
 {
-    private MessageBroker $messageBroker;
+    private MessagePublisher $messagePublisher;
 
-    public function __construct(MessageBroker $messageBroker)
+    public function __construct(MessagePublisher $messagePublisher)
     {
-        $this->messageBroker = $messageBroker;
+        $this->messagePublisher = $messagePublisher;
     }
 
     /**
@@ -28,7 +28,8 @@ final class MessageBrokerCommandBusAdapter implements CommandBus
      */
     public function dispatchCommand(object $command): CommandResponsePromise
     {
-        $this->messageBroker->dispatch(Envelope::wrap($command));
+        // @todo Here, handle queue/routingKey.
+        $this->messagePublisher->dispatch(Envelope::wrap($command));
 
         return new NeverCommandResponsePromise();
     }

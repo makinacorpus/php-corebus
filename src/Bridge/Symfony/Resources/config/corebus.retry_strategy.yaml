@@ -25,7 +25,7 @@ services:
     #
     # Warning: this service has an explicit dependency on the message broker.
     #
-    MakinaCorpus\CoreBus\Implementation\RetryStrategy\RetryStrategyCommandBusDecorator:
-        decorates: corebus.command.bus.synchronous
+    MakinaCorpus\CoreBus\Implementation\RetryStrategy\RetryStrategyCommandConsumerDecorator:
+        decorates: corebus.command.consumer
         decoration_priority: -5
         arguments: ['@.inner', '@corebus.retry_strategy', '@message_broker.message_broker']

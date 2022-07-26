@@ -10,11 +10,11 @@ use MakinaCorpus\CoreBus\Bridge\Symfony\Command\CommandPushCommand;
 use MakinaCorpus\CoreBus\Bridge\Symfony\Command\CommandWorkerCommand;
 use MakinaCorpus\CoreBus\Bridge\Symfony\DependencyInjection\CoreBusExtension;
 use MakinaCorpus\CoreBus\CommandBus\CommandBus;
+use MakinaCorpus\CoreBus\CommandBus\CommandConsumer;
 use MakinaCorpus\CoreBus\CommandBus\SynchronousCommandBus;
 use MakinaCorpus\CoreBus\EventBus\EventBus;
 use MakinaCorpus\EventStore\EventStore;
 use MakinaCorpus\EventStore\Bridge\Symfony\EventStoreBundle;
-use MakinaCorpus\MessageBroker\MessageBroker;
 use MakinaCorpus\MessageBroker\Bridge\Symfony\MessageBrokerBundle;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
@@ -60,7 +60,7 @@ final class KernelConfigurationTest extends TestCase
             $container->setAlias(EventStore::class, 'event_store.event_store');
         }
 
-        if (\in_array(MessageBroker::class, $bundles)) {
+        if (\in_array(MessageBrokerBundle::class, $bundles)) {
             $messageBrokerDefinition = new Definition();
             $messageBrokerDefinition->setClass(MessageBroker::class);
             $container->setDefinition('message_broker.message_broker', $messageBrokerDefinition);
@@ -99,12 +99,22 @@ final class KernelConfigurationTest extends TestCase
         $extension->load([$config], $container = $this->getContainer());
 
         // Ensure dispatcher configuration.
-        self::assertTrue($container->hasAlias('corebus.command.bus.asynchronous'));
-        self::assertTrue($container->hasAlias('corebus.command.bus.synchronous'));
         self::assertTrue($container->hasAlias(CommandBus::class));
-        self::assertTrue($container->hasAlias(EventBus::class));
+        self::assertTrue($container->hasAlias('corebus.command.bus.asynchronous'));
+
+        self::assertTrue($container->hasAlias(CommandConsumer::class));
+        self::assertTrue($container->hasAlias('corebus.command.consumer'));
+        self::assertTrue($container->hasDefinition('corebus.command.consumer.transactional'));
+
         self::assertTrue($container->hasAlias(SynchronousCommandBus::class));
-        self::assertTrue($container->hasDefinition('corebus.bus.transactional'));
+        self::assertTrue($container->hasAlias('corebus.command.bus.synchronous'));
+        self::assertTrue($container->hasDefinition('corebus.command.bus.passthrough'));
+
+        self::assertTrue($container->hasAlias(CommandConsumer::class));
+        self::assertTrue($container->hasDefinition('corebus.command.consumer.default'));
+
+        self::assertTrue($container->hasAlias(EventBus::class));
+        self::assertTrue($container->hasAlias('corebus.event.bus.internal'));
 
         // Some services should not be loaded.
         self::assertFalse($container->hasDefinition('corebus.event_store_info_extractor'));

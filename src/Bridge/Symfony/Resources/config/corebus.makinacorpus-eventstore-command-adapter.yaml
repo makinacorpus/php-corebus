@@ -30,7 +30,7 @@ services:
         class: MakinaCorpus\CoreBus\Bridge\EventStore\EventInfoExtratorChain
         arguments: [[]]
 
-    MakinaCorpus\CoreBus\Bridge\EventStore\EventStoreCommandBusDecorator:
-        decorates: corebus.command.bus.synchronous
+    MakinaCorpus\CoreBus\Bridge\EventStore\EventStoreCommandConsumerDecorator:
+        decorates: corebus.command.consumer
         decoration_priority: -5
         arguments: ['@.inner', '@event_store.event_store', '@corebus.event_store_info_extractor', '@?event_store.projector.player']

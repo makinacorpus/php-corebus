@@ -4,33 +4,33 @@ declare(strict_types=1);
 
 namespace MakinaCorpus\CoreBus\Tests\Implementation\RetryStrategy;
 
+use MakinaCorpus\CoreBus\CommandBus\CommandConsumer;
 use MakinaCorpus\CoreBus\CommandBus\CommandResponsePromise;
-use MakinaCorpus\CoreBus\CommandBus\SynchronousCommandBus;
 use MakinaCorpus\CoreBus\Error\DispatcherRetryableError;
 use MakinaCorpus\CoreBus\Implementation\RetryStrategy\DefaultRetryStrategy;
-use MakinaCorpus\CoreBus\Implementation\RetryStrategy\RetryStrategyCommandBusDecorator;
+use MakinaCorpus\CoreBus\Implementation\RetryStrategy\RetryStrategyCommandConsumerDecorator;
 use MakinaCorpus\CoreBus\Tests\Implementation\Mock\MockCommandA;
 use MakinaCorpus\Message\Envelope;
 use MakinaCorpus\Message\Property;
-use MakinaCorpus\MessageBroker\MessageBroker;
+use MakinaCorpus\MessageBroker\MessageConsumer;
 use PHPUnit\Framework\TestCase;
 
-final class RetryStrategyCommandBusDecoratorTest extends TestCase
+final class RetryStrategyCommandConsumerDecoratorTest extends TestCase
 {
     public function testProcessDoesNotAttemptRetryOnArbitraryException(): void
     {
         self::expectNotToPerformAssertions();
 
-        $commandBus = new class () implements SynchronousCommandBus
+        $commandConsumer = new class () implements CommandConsumer
         {
-            public function dispatchCommand(object $command): CommandResponsePromise
+            public function consumeCommand(object $command): CommandResponsePromise
             {
                 throw new \DomainException();
             }
         };
 
-        $commandBus = $this->decorate(
-            $commandBus,
+        $commandConsumer = $this->decorate(
+            $commandConsumer,
             static function (Envelope $envelope) {
                throw new \BadMethodCallException("Message should not have been retried.");
             },
@@ -40,7 +40,7 @@ final class RetryStrategyCommandBusDecoratorTest extends TestCase
         );
 
         try {
-            $commandBus->dispatchCommand(new MockCommandA());
+            $commandConsumer->consumeCommand(new MockCommandA());
             self::fail();
         } catch (\DomainException $e) {}
     }
@@ -49,16 +49,16 @@ final class RetryStrategyCommandBusDecoratorTest extends TestCase
     {
         $retries = [];
 
-        $commandBus = new class () implements SynchronousCommandBus
+        $commandConsumer = new class () implements CommandConsumer
         {
-            public function dispatchCommand(object $command): CommandResponsePromise
+            public function consumeCommand(object $command): CommandResponsePromise
             {
                 throw new DispatcherRetryableError();
             }
         };
 
-        $commandBus = $this->decorate(
-            $commandBus,
+        $commandConsumer = $this->decorate(
+            $commandConsumer,
             static function (Envelope $envelope) use (&$retries) {
                 $retries[] = $envelope;
             },
@@ -70,7 +70,7 @@ final class RetryStrategyCommandBusDecoratorTest extends TestCase
         $sentMessage = new MockCommandA();
 
         try {
-            $commandBus->dispatchCommand($sentMessage);
+            $commandConsumer->consumeCommand($sentMessage);
             self::fail();
         } catch (DispatcherRetryableError $e) {}
 
@@ -89,16 +89,16 @@ final class RetryStrategyCommandBusDecoratorTest extends TestCase
     {
         self::expectNotToPerformAssertions();
 
-        $commandBus = new class () implements SynchronousCommandBus
+        $commandConsumer = new class () implements CommandConsumer
         {
-            public function dispatchCommand(object $command): CommandResponsePromise
+            public function consumeCommand(object $command): CommandResponsePromise
             {
                 throw new \DomainException();
             }
         };
 
-        $commandBus = $this->decorate(
-            $commandBus,
+        $commandConsumer = $this->decorate(
+            $commandConsumer,
             static function () { throw new DispatcherRetryableError(); },
             static function (Envelope $envelope) {
                 // Do nothing.
@@ -111,17 +111,17 @@ final class RetryStrategyCommandBusDecoratorTest extends TestCase
         ]);
 
         try {
-            $commandBus->dispatchCommand($sentEnvelope);
+            $commandConsumer->consumeCommand($sentEnvelope);
             self::fail();
         } catch (\DomainException $e) {}
     }
 
-    private function decorate(SynchronousCommandBus $decorated, callable $retryCallback, callable $rejectCallback): SynchronousCommandBus
+    private function decorate(CommandConsumer $decorated, callable $retryCallback, callable $rejectCallback): CommandConsumer
     {
-        return new RetryStrategyCommandBusDecorator(
+        return new RetryStrategyCommandConsumerDecorator(
             $decorated,
             new DefaultRetryStrategy(),
-            new class ($retryCallback, $rejectCallback) implements MessageBroker
+            new class ($retryCallback, $rejectCallback) implements MessageConsumer
             {
                 private $retryCallback;
                 private $rejectCallback;
@@ -133,11 +133,6 @@ final class RetryStrategyCommandBusDecoratorTest extends TestCase
                 }
 
                 public function get(): ?Envelope
-                {
-                    throw new \BadMethodCallException("We are not testing this.");
-                }
-
-                public function dispatch(Envelope $envelope): void
                 {
                     throw new \BadMethodCallException("We are not testing this.");
                 }
