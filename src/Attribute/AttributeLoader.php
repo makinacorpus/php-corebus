@@ -41,6 +41,26 @@ final class AttributeLoader
     /**
      * {@inheritdoc}
      */
+    public function firstFromClass(/* string|object */ $className, $attributeName): ?object
+    {
+        $className = \is_object($className) ? \get_class($className) : $className;
+
+        try {
+            $reflectionClass = new \ReflectionClass($className);
+        } catch (\ReflectionException $e) {
+            throw new AttributeError("Class does not exists: " . $className, 0, $e);
+        }
+
+        foreach ($reflectionClass->getAttributes($attributeName) as $attribute) {
+            return $attribute->newInstance();
+        }
+
+        return null;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
     public function loadFromClass(/* string|object */ $className): AttributeList
     {
         $className = \is_object($className) ? \get_class($className) : $className;
