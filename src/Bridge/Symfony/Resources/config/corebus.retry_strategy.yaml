@@ -21,11 +21,3 @@ services:
 
     corebus.retry_strategy:
         alias: corebus.retry_strategy.default
-
-    #
-    # Warning: this service has an explicit dependency on the message broker.
-    #
-    MakinaCorpus\CoreBus\Implementation\RetryStrategy\RetryStrategyCommandConsumerDecorator:
-        decorates: corebus.command.consumer
-        decoration_priority: -5
-        arguments: ['@.inner', '@corebus.retry_strategy', '@message_broker.message_broker']

@@ -33,4 +33,5 @@ services:
     MakinaCorpus\CoreBus\Bridge\EventStore\EventStoreCommandConsumerDecorator:
         decorates: corebus.command.consumer
         decoration_priority: -5
-        arguments: ['@.inner', '@event_store.event_store', '@corebus.event_store_info_extractor', '@?event_store.projector.player']
+        # Last parameter is runtime project player.
+        arguments: ['@.inner', '@event_store.event_store', '@corebus.event_store_info_extractor', null]

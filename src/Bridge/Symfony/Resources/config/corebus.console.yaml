@@ -17,5 +17,7 @@ services:
         tags: ['console.command']
 
     MakinaCorpus\CoreBus\Bridge\Symfony\Command\CommandWorkerCommand:
-        arguments: ['@corebus.command.consumer', '@?message_broker.message_broker']
-        tags: ['console.command']
+        arguments: ['@corebus.command.consumer', '@?message_broker.consumer_factory', '@?corebus.retry_strategy']
+        tags:
+            - { name: "monolog.logger", channel: "corebus" }
+            - { name: "console.command"}

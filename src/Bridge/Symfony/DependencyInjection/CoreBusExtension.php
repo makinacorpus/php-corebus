@@ -5,10 +5,13 @@ declare(strict_types=1);
 namespace MakinaCorpus\CoreBus\Bridge\Symfony\DependencyInjection;
 
 use Goat\Query\Symfony\GoatQueryBundle;
+use MakinaCorpus\CoreBus\Bridge\EventStore\EventStoreCommandConsumerDecorator;
+use MakinaCorpus\CoreBus\Bridge\EventStore\EventStoreEventBusDecorator;
 use MakinaCorpus\EventStore\Bridge\Symfony\EventStoreBundle;
 use MakinaCorpus\MessageBroker\Bridge\Symfony\MessageBrokerBundle;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\Reference;
 use Symfony\Component\DependencyInjection\Exception\InvalidArgumentException;
 use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
 use Symfony\Component\HttpKernel\DependencyInjection\Extension;
@@ -100,8 +103,24 @@ final class CoreBusExtension extends Extension
             }
             $loader->load('corebus.makinacorpus-eventstore-adapter.yaml');
 
+            $runtimeProjectorEnabled = $config['event_store']['runtime_projector'] ?? false;
+
+            if ($runtimeProjectorEnabled) {
+                $container
+                    ->getDefinition(EventStoreEventBusDecorator::class)
+                    ->setArgument(3, new Reference('@?event_store.projector.player'))
+                ;
+            }
+
             if ($config['event_store']['log_commands'] ?? false) {
                 $loader->load('corebus.makinacorpus-eventstore-command-adapter.yaml');
+
+                if ($runtimeProjectorEnabled) {
+                    $container
+                        ->getDefinition(EventStoreCommandConsumerDecorator::class)
+                        ->setArgument(3, new Reference('@?event_store.projector.player'))
+                    ;
+                }
             }
         }
 

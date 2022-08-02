@@ -16,6 +16,11 @@ use Psr\Log\NullLogger;
 /**
  * From our command bus interface, catch messages and send them into
  * makinacorpus/message-broker message broker instead.
+ *
+ * Because the retry strategy requires you to have the same MessageConsumer
+ * instance the message originated from, it can't be used in a generic manner.
+ * This component will never be auto-configured, but will be instanciated by
+ * the worker instead in order to decorate its own logic.
  */
 final class RetryStrategyCommandConsumerDecorator implements CommandConsumer, LoggerAwareInterface
 {

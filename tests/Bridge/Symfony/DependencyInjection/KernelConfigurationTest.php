@@ -15,6 +15,7 @@ use MakinaCorpus\CoreBus\CommandBus\SynchronousCommandBus;
 use MakinaCorpus\CoreBus\EventBus\EventBus;
 use MakinaCorpus\EventStore\EventStore;
 use MakinaCorpus\EventStore\Bridge\Symfony\EventStoreBundle;
+use MakinaCorpus\MessageBroker\MessageConsumerFactory;
 use MakinaCorpus\MessageBroker\Bridge\Symfony\MessageBrokerBundle;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
@@ -61,10 +62,10 @@ final class KernelConfigurationTest extends TestCase
         }
 
         if (\in_array(MessageBrokerBundle::class, $bundles)) {
-            $messageBrokerDefinition = new Definition();
-            $messageBrokerDefinition->setClass(MessageBroker::class);
-            $container->setDefinition('message_broker.message_broker', $messageBrokerDefinition);
-            $container->setAlias(MessageBroker::class, 'message_broker.message_broker');
+            $messageConsumerFactoryDefinition = new Definition();
+            $messageConsumerFactoryDefinition->setClass(MessageConsumerFactory::class);
+            $container->setDefinition('message_broker.consumer_factory', $messageConsumerFactoryDefinition);
+            $container->setAlias(MessageBroker::class, 'message_broker.consumer_factory');
         }
 
         return $container;

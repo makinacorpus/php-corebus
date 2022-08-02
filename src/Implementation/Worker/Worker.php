@@ -5,9 +5,12 @@ declare(strict_types=1);
 namespace MakinaCorpus\CoreBus\Implementation\Worker;
 
 use MakinaCorpus\CoreBus\CommandBus\CommandConsumer;
+use MakinaCorpus\CoreBus\Implementation\RetryStrategy\RetryStrategy;
+use MakinaCorpus\CoreBus\Implementation\RetryStrategy\RetryStrategyCommandConsumerDecorator;
 use MakinaCorpus\MessageBroker\MessageConsumer;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
+use Psr\Log\NullLogger;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
@@ -20,18 +23,43 @@ final class Worker implements LoggerAwareInterface
     private CommandConsumer $commandConsumer;
     private MessageConsumer $messageConsumer;
     private ?EventDispatcherInterface $eventDispatcher = null;
+    private bool $retryStrategySet = false;
     private int $idleSleepTime;
     private ?\DateTimeInterface $startedAt = null;
     private bool $shouldStop = false;
     private int $limit = 0;
     private int $done = 0;
 
-    public function __construct(CommandConsumer $commandConsumer, MessageConsumer $messageConsumer, ?int $idleSleepTime = null, int $limit = 0)
-    {
+    public function __construct(
+        CommandConsumer $commandConsumer,
+        MessageConsumer $messageConsumer,
+        ?int $idleSleepTime = null,
+        int $limit = 0
+    ) {
         $this->commandConsumer = $commandConsumer;
         $this->messageConsumer = $messageConsumer;
         $this->idleSleepTime = $idleSleepTime ?? self::DEFAULT_IDLE_SLEEP_TIME;
         $this->limit = $limit;
+        $this->logger = new NullLogger();
+    }
+
+    public function setRetryStrategy(RetryStrategy $retryStrategy): void
+    {
+        if ($this->startedAt) {
+            throw new \LogicException("You must set retry strategy before running the worker.");
+        }
+        if ($this->retryStrategySet) {
+            // There is no way at this moment to undecore the current command
+            // consumer in order to redecorate it, so we just forbid any change
+            // in the retry strategy (better be safe than sorry).
+            throw new \LogicException("Retry strategy was already set and cannot be changed.");
+        }
+
+        $decorator = new RetryStrategyCommandConsumerDecorator($this->commandConsumer, $retryStrategy, $this->messageConsumer);
+        $decorator->setLogger($this->logger);
+
+        $this->commandConsumer = $decorator;
+        $this->retryStrategySet = true;
     }
 
     public function getEventDispatcher(): EventDispatcherInterface

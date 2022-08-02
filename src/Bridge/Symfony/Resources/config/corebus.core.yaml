@@ -62,6 +62,8 @@ services:
         class: MakinaCorpus\CoreBus\Implementation\CommandBus\PassthroughCommandBus
         arguments:
             - "@corebus.command.consumer"
+        tags:
+            - { name: "monolog.logger", channel: "corebus" }
 
     corebus.command.bus.asynchronous:
         alias: corebus.command.bus.passthrough
@@ -85,6 +87,8 @@ services:
         class: MakinaCorpus\CoreBus\Implementation\CommandBus\DefaultCommandConsumer
         arguments:
             - "@corebus.command.handler_locator"
+        tags:
+            - { name: "monolog.logger", channel: "corebus" }
 
     corebus.command.consumer.transactional:
         class: MakinaCorpus\CoreBus\Implementation\CommandBus\TransactionalCommandConsumer
@@ -94,6 +98,8 @@ services:
             - "@corebus.event.bus.external"
             - "@corebus.event_buffer.manager"
             - "@corebus.transaction.manager"
+        tags:
+            - { name: "monolog.logger", channel: "corebus" }
 
     corebus.command.consumer:
         alias: corebus.command.consumer.transactional

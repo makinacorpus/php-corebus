@@ -54,6 +54,11 @@ core_bus:
         enabled: false
 
         #
+        # Enable or disable the runtime projector.
+        #
+        runtime_projector: false
+
+        #
         # Logs commands into event store as well.
         #
         # This exists for backward compatilibity purpose and should probably

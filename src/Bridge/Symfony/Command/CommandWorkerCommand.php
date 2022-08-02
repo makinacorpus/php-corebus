@@ -5,32 +5,41 @@ declare(strict_types=1);
 namespace MakinaCorpus\CoreBus\Bridge\Symfony\Command;
 
 use MakinaCorpus\CoreBus\CommandBus\CommandConsumer;
+use MakinaCorpus\CoreBus\Implementation\RetryStrategy\RetryStrategy;
 use MakinaCorpus\CoreBus\Implementation\Worker\Worker;
 use MakinaCorpus\CoreBus\Implementation\Worker\WorkerEvent;
 use MakinaCorpus\Message\Envelope;
 use MakinaCorpus\MessageBroker\MessageConsumerFactory;
+use Psr\Log\LoggerAwareInterface;
+use Psr\Log\LoggerAwareTrait;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Exception\InvalidArgumentException;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
+use Psr\Log\NullLogger;
 
 /**
  * @codeCoverageIgnore
  */
-final class CommandWorkerCommand extends Command
+final class CommandWorkerCommand extends Command implements LoggerAwareInterface
 {
+    use LoggerAwareTrait;
+
     protected static $defaultName = 'corebus:worker';
 
     private CommandConsumer $commandConsumer;
-    private ?MessageConsumerFactory $messageConsumerFactory;
+    private ?MessageConsumerFactory $messageConsumerFactory = null;
+    private ?RetryStrategy $retryStrategy = null;
 
-    public function __construct(CommandConsumer $commandConsumer, ?MessageConsumerFactory $messageConsumerFactory = null)
+    public function __construct(CommandConsumer $commandConsumer, ?MessageConsumerFactory $messageConsumerFactory = null, ?RetryStrategy $retryStrategy = null)
     {
         parent::__construct();
 
         $this->commandConsumer = $commandConsumer;
         $this->messageConsumerFactory = $messageConsumerFactory;
+        $this->retryStrategy = $retryStrategy;
+        $this->logger = new NullLogger();
     }
 
     /**
@@ -42,6 +51,7 @@ final class CommandWorkerCommand extends Command
             ->setDescription('Run bus worker daemon')
             ->addOption('limit', 'l', InputOption::VALUE_OPTIONAL, "Number of messages to consume", null)
             // ->addOption('idle-sleep', 's', InputOption::VALUE_OPTIONAL, "Idle sleep time, in micro seconds", null)
+            ->addOption('routing-key', 'r', InputOption::VALUE_IS_ARRAY | InputOption::VALUE_OPTIONAL, "Queue in which to consume messages")
             ->addOption('memory-limit', 'm', InputOption::VALUE_OPTIONAL, "Maximum memory consumption; eg. 128M, 1G, ...", null)
             ->addOption('time-limit', 't', InputOption::VALUE_OPTIONAL, "Maximum run time; eg. '1 hour', '2 minutes', ...", null)
         ;
@@ -61,9 +71,20 @@ final class CommandWorkerCommand extends Command
         $memoryLimit = self::parseSize($input->getOption('memory-limit'));
         $timeLimit = self::parseTime($input->getOption('time-limit'));
         $eventCountLimit = (int) $input->getOption('limit');
+        $queueList = (array) $input->getOption('routing-key');
+
+        if (!$queueList) {
+            $queueList = ['default'];
+        }
+
+        $output->writeln(\sprintf("Running bus worker consumming in '%s' routing key(s).", \implode("', '", $queueList)));
 
         // @todo Here, handle attached queues.
-        $worker = new Worker($this->commandConsumer, $this->messageConsumerFactory->createConsumer(), null, $eventCountLimit);
+        $worker = new Worker($this->commandConsumer, $this->messageConsumerFactory->createConsumer($queueList), null, $eventCountLimit);
+        $worker->setLogger($this->logger);
+        if ($this->retryStrategy) {
+            $worker->setRetryStrategy($this->retryStrategy);
+        }
 
         $handleTick = static function () use ($worker, $startedTimestamp, $memoryLimit, $timeLimit, $output) {
             if ($memoryLimit && $memoryLimit <= \memory_get_usage(true)) {

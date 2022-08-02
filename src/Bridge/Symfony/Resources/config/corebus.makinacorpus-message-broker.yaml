@@ -20,7 +20,7 @@ services:
 
     corebus.command.bus.message_broker:
         class: MakinaCorpus\CoreBus\Bridge\MessageBroker\MessagePublisherCommandBusAdapter
-        arguments: ['@message_broker.message_broker']
+        arguments: ['@message_broker.publisher']
 
     corebus.command.bus.asynchronous:
         alias: corebus.command.bus.message_broker

@@ -106,6 +106,7 @@ final class TransactionalCommandConsumer implements CommandConsumer, EventBus, L
                 }
 
                 $transaction->commit();
+                $transaction = null;
             }
 
             $this->flush();
@@ -113,10 +114,11 @@ final class TransactionalCommandConsumer implements CommandConsumer, EventBus, L
             return $response;
 
         } catch (\Throwable $e) {
-            $this->logger->error("Transaction failed at item {index}/{total}", ['index' => $count, 'total' => $total]);
+            $this->logger->error("TransactionalCommandConsumer: Transaction failed at item {index}/{total}, rollbacking.", ['index' => $count, 'total' => $total]);
 
             if ($transaction) {
                 $transaction->rollback();
+                $transaction = null;
             }
 
             $this->discard();
@@ -125,8 +127,16 @@ final class TransactionalCommandConsumer implements CommandConsumer, EventBus, L
 
         } finally {
             if ($this->buffer) {
+                $this->logger->critical("TransactionalCommandConsumer: Buffer was nor flushed nor discarded, discarding.");
+
                 $this->buffer->discard();
                 $this->buffer = null;
+            }
+
+            if ($transaction && $transaction->running()) {
+                $this->logger->critical("TransactionalCommandConsumer: Transaction was left opened, rollbacking.");
+
+                $transaction->rollback();
             }
         }
     }
@@ -171,7 +181,7 @@ final class TransactionalCommandConsumer implements CommandConsumer, EventBus, L
      */
     private function discard(): void
     {
-        $this->logger->error("TransactionalCommandConsumer: Discarded {count} events.", ['count' => \count($this->buffer)]);
+        $this->logger->error("TransactionalCommandConsumer: Discarding {count} events.", ['count' => \count($this->buffer)]);
 
         $this->buffer->discard();
         $this->buffer = null;
