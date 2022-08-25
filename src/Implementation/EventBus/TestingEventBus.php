@@ -88,7 +88,7 @@ class TestingEventBus implements EventBus
         return $this->getAt(0);
     }
 
-    public function firstWithClass(string $className): int
+    public function firstWithClass(string $className)
     {
         foreach ($this->events as $event) {
             if (\get_class($event) === $className) {
@@ -99,7 +99,7 @@ class TestingEventBus implements EventBus
         throw new \InvalidArgumentException(\sprintf("There is no event with class %s", $className));
     }
 
-    public function firstInstanceOf(string $className): int
+    public function firstInstanceOf(string $className)
     {
         foreach ($this->events as $event) {
             if ($event instanceof $className) {
