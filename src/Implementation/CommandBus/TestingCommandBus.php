@@ -90,7 +90,7 @@ class TestingCommandBus implements CommandBus
         return $this->getAt(0);
     }
 
-    public function firstWithClass(string $className): int
+    public function firstWithClass(string $className)
     {
         foreach ($this->commands as $command) {
             if (\get_class($command) === $className) {
@@ -101,7 +101,7 @@ class TestingCommandBus implements CommandBus
         throw new \InvalidArgumentException(\sprintf("There is no command with class %s", $className));
     }
 
-    public function firstInstanceOf(string $className): int
+    public function firstInstanceOf(string $className)
     {
         foreach ($this->commands as $command) {
             if ($command instanceof $className) {
