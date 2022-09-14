@@ -52,6 +52,7 @@ final class CommandPushCommand extends Command
             ->addOption('content-type', 't', InputOption::VALUE_REQUIRED, 'Content type, must be a known type to the serializer component', 'json')
             ->addOption('content', 'c', InputOption::VALUE_REQUIRED, 'Content formatted using the given --content-type format (default is JSON)')
             ->addOption('async', 'a', InputOption::VALUE_NONE, 'Only pushes the event into the bus for later asynchronous execution')
+            ->addOption('tag', null, InputOption::VALUE_REQUIRED, 'Normalization tag name (default is "command")')
         ;
     }
 
@@ -60,11 +61,12 @@ final class CommandPushCommand extends Command
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
+        $normalizationTag = $input->getOption('tag') ?? NameMap::TAG_COMMAND;
         $commandName = $input->getArgument('command-name');
         $format = $input->getOption('content-type');
         $data = $input->getOption('content');
 
-        $className = $this->nameMap->toPhpType($commandName, NameMap::TAG_COMMAND);
+        $className = $this->nameMap->toPhpType($commandName, $normalizationTag);
 
         if ($data) {
             $message = $this->serializer->unserialize($className, $format, $data);
