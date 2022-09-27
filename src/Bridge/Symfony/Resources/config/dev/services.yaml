@@ -1,0 +1,25 @@
+#
+# Copy paste this file in your config/dev/ folder.
+#
+services:
+
+    corebus.event.bus.internal.test:
+        public: true
+        class: MakinaCorpus\CoreBus\Bridge\Testing\MockEventBus
+        decorates: corebus.event.bus.internal
+        decoration_priority: -1000
+        arguments: ['@.inner']
+
+    corebus.command.bus.synchronous.test:
+        public: true
+        class: MakinaCorpus\CoreBus\Bridge\Testing\MockSynchronousCommandBus
+        decorates: corebus.command.bus.synchronous
+        decoration_priority: -1000
+        arguments: ['@.inner']
+
+    corebus.command.bus.asynchronous.test:
+        public: true
+        class: MakinaCorpus\CoreBus\Bridge\Testing\MockCommandBus
+        decorates: corebus.command.bus.asynchronous
+        decoration_priority: -1000
+        arguments: ['@.inner']

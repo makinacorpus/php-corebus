@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace MakinaCorpus\CoreBus\Tests\Implementation\CommandBus;
 
-use MakinaCorpus\CoreBus\CommandBus\CommandBus;
+use MakinaCorpus\CoreBus\Bridge\Testing\MockEventBus;
 use MakinaCorpus\CoreBus\CommandBus\CommandConsumer;
 use MakinaCorpus\CoreBus\CommandBus\CommandResponsePromise;
 use MakinaCorpus\CoreBus\CommandBus\Error\CommandHandlerNotFoundError;
@@ -14,6 +14,7 @@ use MakinaCorpus\CoreBus\EventBus\EventBusAwareTrait;
 use MakinaCorpus\CoreBus\Implementation\CommandBus\TransactionalCommandConsumer;
 use MakinaCorpus\CoreBus\Implementation\CommandBus\Response\SynchronousCommandResponsePromise;
 use MakinaCorpus\CoreBus\Implementation\EventBus\ArrayEventBufferManager;
+use MakinaCorpus\CoreBus\Implementation\EventBus\NullEventBus;
 use MakinaCorpus\CoreBus\Implementation\Transaction\Transaction;
 use MakinaCorpus\CoreBus\Implementation\Transaction\TransactionManager;
 use MakinaCorpus\CoreBus\Tests\Implementation\Mock\MockCommandA;
@@ -23,7 +24,6 @@ use MakinaCorpus\CoreBus\Tests\Implementation\Mock\MockCommandC;
 use MakinaCorpus\CoreBus\Tests\Implementation\Mock\MockCommandNoTransaction;
 use MakinaCorpus\CoreBus\Tests\Implementation\Mock\MockEventA;
 use MakinaCorpus\CoreBus\Tests\Implementation\Mock\MockEventB;
-use MakinaCorpus\CoreBus\Tests\Implementation\Mock\MockEventBus;
 use MakinaCorpus\CoreBus\Tests\Implementation\Mock\MockEventC;
 use MakinaCorpus\CoreBus\Tests\Implementation\Mock\MockResponse;
 use PHPUnit\Framework\TestCase;
@@ -33,8 +33,8 @@ final class TransactionalCommandConsumerTest extends TestCase
     public function testCommitFlushEventBuffer(): void
     {
         $decorated = new TestingTransactionalCommandConsumer();
-        $externalEventBus = new MockEventBus();
-        $internalEventBus = new MockEventBus();
+        $externalEventBus = new MockEventBus(new NullEventBus());
+        $internalEventBus = new MockEventBus(new NullEventBus());
 
         $commandBus = $this->createCommandConsumer(
             $decorated,
@@ -45,23 +45,23 @@ final class TransactionalCommandConsumerTest extends TestCase
 
         $commandBus->consumeCommand(new MockCommandA());
 
-        self::assertCount(1, $externalEventBus->events);
-        self::assertCount(1, $internalEventBus->events);
+        self::assertCount(1, $externalEventBus->getAllEvents());
+        self::assertCount(1, $internalEventBus->getAllEvents());
 
-        $externalEventBus->events = [];
-        $internalEventBus->events = [];
+        $externalEventBus->reset();
+        $internalEventBus->reset();
 
         $commandBus->consumeCommand(new MockCommandC());
 
-        self::assertCount(3, $externalEventBus->events);
-        self::assertCount(3, $internalEventBus->events);
+        self::assertCount(3, $externalEventBus->getAllEvents());
+        self::assertCount(3, $internalEventBus->getAllEvents());
     }
 
     public function testRollbackDiscardEventBuffer(): void
     {
         $decorated = new TestingTransactionalCommandConsumer();
-        $externalEventBus = new MockEventBus();
-        $internalEventBus = new MockEventBus();
+        $externalEventBus = new MockEventBus(new NullEventBus());
+        $internalEventBus = new MockEventBus(new NullEventBus());
 
         $commandBus = $this->createCommandConsumer(
             $decorated,
@@ -75,15 +75,15 @@ final class TransactionalCommandConsumerTest extends TestCase
         } catch (\DomainException $e) {
         }
 
-        self::assertCount(2, $internalEventBus->events);
-        self::assertCount(0, $externalEventBus->events);
+        self::assertCount(2, $internalEventBus->getAllEvents());
+        self::assertCount(0, $externalEventBus->getAllEvents());
     }
 
     public function testTransactionDefaultEnabled(): void
     {
         $decorated = new TestingTransactionalCommandConsumer();
-        $externalEventBus = new MockEventBus();
-        $internalEventBus = new MockEventBus();
+        $externalEventBus = new MockEventBus(new NullEventBus());
+        $internalEventBus = new MockEventBus(new NullEventBus());
 
         $transactionManager = new TestingTransactionManager();
 
@@ -103,8 +103,8 @@ final class TransactionalCommandConsumerTest extends TestCase
     public function testTransactionDisabledWithAttribute(): void
     {
         $decorated = new TestingTransactionalCommandConsumer();
-        $externalEventBus = new MockEventBus();
-        $internalEventBus = new MockEventBus();
+        $externalEventBus = new MockEventBus(new NullEventBus());
+        $internalEventBus = new MockEventBus(new NullEventBus());
 
         $transactionManager = new TestingTransactionManager();
 
@@ -125,8 +125,8 @@ final class TransactionalCommandConsumerTest extends TestCase
     public function testCommandAsEvent(): void
     {
         $decorated = new TestingTransactionalCommandConsumer();
-        $externalEventBus = new MockEventBus();
-        $internalEventBus = new MockEventBus();
+        $externalEventBus = new MockEventBus(new NullEventBus());
+        $internalEventBus = new MockEventBus(new NullEventBus());
 
         $transactionManager = new TestingTransactionManager();
 
@@ -141,15 +141,15 @@ final class TransactionalCommandConsumerTest extends TestCase
         $command = new MockCommandAsEvent();
         $commandBus->consumeCommand($command);
 
-        self::assertContains($command, $externalEventBus->events);
-        self::assertContains($command, $internalEventBus->events);
+        self::assertContains($command, $externalEventBus->getAllEvents());
+        self::assertContains($command, $internalEventBus->getAllEvents());
     }
 
     public function testCommandAsEventNot(): void
     {
         $decorated = new TestingTransactionalCommandConsumer();
-        $externalEventBus = new MockEventBus();
-        $internalEventBus = new MockEventBus();
+        $externalEventBus = new MockEventBus(new NullEventBus());
+        $internalEventBus = new MockEventBus(new NullEventBus());
 
         $transactionManager = new TestingTransactionManager();
 
@@ -164,15 +164,15 @@ final class TransactionalCommandConsumerTest extends TestCase
         $command = new MockCommandA();
         $commandBus->consumeCommand($command);
 
-        self::assertNotContains($command, $externalEventBus->events);
-        self::assertNotContains($command, $internalEventBus->events);
+        self::assertNotContains($command, $externalEventBus->getAllEvents());
+        self::assertNotContains($command, $internalEventBus->getAllEvents());
     }
 
     public function testMultiCommand(): void
     {
         $decorated = new TestingTransactionalCommandConsumer();
-        $externalEventBus = new MockEventBus();
-        $internalEventBus = new MockEventBus();
+        $externalEventBus = new MockEventBus(new NullEventBus());
+        $internalEventBus = new MockEventBus(new NullEventBus());
 
         $transactionManager = new TestingTransactionManager();
 
@@ -192,7 +192,7 @@ final class TransactionalCommandConsumerTest extends TestCase
             ])
         );
 
-        self::assertCount(3, $internalEventBus->events);
+        self::assertCount(3, $internalEventBus->getAllEvents());
     }
 
     private function createCommandConsumer(
