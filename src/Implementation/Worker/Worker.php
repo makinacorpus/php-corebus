@@ -113,6 +113,7 @@ final class Worker implements LoggerAwareInterface
                 $this->dispatch(WorkerEvent::error());
             }
 
+            $this->dispatch(WorkerEvent::done($message));
             $this->done++;
 
             if (0 < $this->limit && $this->done >= $this->limit) {

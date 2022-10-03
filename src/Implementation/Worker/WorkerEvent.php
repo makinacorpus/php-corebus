@@ -20,6 +20,9 @@ final class WorkerEvent
     /** Dispatcher worker starts message processing. */
     const NEXT = 'dispatcher:worker:next';
 
+    /** Dispatcher worker just ended dispatching a message. */
+    const DONE = 'dispatcher:worker:done';
+
     /** Dispatcher worker starts idle loop. */
     const IDLE = 'dispatcher:worker:idle';
 
@@ -39,6 +42,11 @@ final class WorkerEvent
     public static function next(Envelope $message): self
     {
         return new self(self::NEXT, $message);
+    }
+
+    public static function done(Envelope $message): self
+    {
+        return new self(self::DONE, $message);
     }
 
     public static function idle(): self

@@ -12,12 +12,13 @@ use MakinaCorpus\Message\Envelope;
 use MakinaCorpus\MessageBroker\MessageConsumerFactory;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
+use Psr\Log\NullLogger;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Exception\InvalidArgumentException;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
-use Psr\Log\NullLogger;
+use Symfony\Component\HttpKernel\DependencyInjection\ServicesResetter;
 
 /**
  * @codeCoverageIgnore
@@ -31,14 +32,20 @@ final class CommandWorkerCommand extends Command implements LoggerAwareInterface
     private CommandConsumer $commandConsumer;
     private ?MessageConsumerFactory $messageConsumerFactory = null;
     private ?RetryStrategy $retryStrategy = null;
+    private ?ServicesResetter $servicesResetter = null;
 
-    public function __construct(CommandConsumer $commandConsumer, ?MessageConsumerFactory $messageConsumerFactory = null, ?RetryStrategy $retryStrategy = null)
-    {
+    public function __construct(
+        CommandConsumer $commandConsumer,
+        ?MessageConsumerFactory $messageConsumerFactory = null,
+        ?RetryStrategy $retryStrategy = null,
+        ?ServicesResetter $servicesResetter = null
+    ) {
         parent::__construct();
 
         $this->commandConsumer = $commandConsumer;
         $this->messageConsumerFactory = $messageConsumerFactory;
         $this->retryStrategy = $retryStrategy;
+        $this->servicesResetter = $servicesResetter;
         $this->logger = new NullLogger();
     }
 
@@ -79,7 +86,6 @@ final class CommandWorkerCommand extends Command implements LoggerAwareInterface
 
         $output->writeln(\sprintf("Running bus worker consumming in '%s' routing key(s).", \implode("', '", $queueList)));
 
-        // @todo Here, handle attached queues.
         $worker = new Worker($this->commandConsumer, $this->messageConsumerFactory->createConsumer($queueList), null, $eventCountLimit);
         $worker->setLogger($this->logger);
         if ($this->retryStrategy) {
@@ -118,6 +124,10 @@ final class CommandWorkerCommand extends Command implements LoggerAwareInterface
                 $handleTick();
             }
         );
+
+        if ($this->servicesResetter) {
+            $eventDispatcher->addListener(WorkerEvent::DONE, fn () => $this->servicesResetter->reset());
+        }
 
         $worker->run();
 
