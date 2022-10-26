@@ -60,6 +60,7 @@ final class CommandWorkerCommand extends Command implements LoggerAwareInterface
             // ->addOption('idle-sleep', 's', InputOption::VALUE_OPTIONAL, "Idle sleep time, in micro seconds", null)
             ->addOption('routing-key', 'r', InputOption::VALUE_IS_ARRAY | InputOption::VALUE_OPTIONAL, "Queue in which to consume messages")
             ->addOption('memory-limit', 'm', InputOption::VALUE_OPTIONAL, "Maximum memory consumption; eg. 128M, 1G, ...", null)
+            ->addOption('memory-leak', 'w', InputOption::VALUE_REQUIRED, "Memory leak warning threshold when consuming a message; eg. 128M, 1G, ...", '1M')
             ->addOption('time-limit', 't', InputOption::VALUE_OPTIONAL, "Maximum run time; eg. '1 hour', '2 minutes', ...", null)
         ;
     }
@@ -75,10 +76,39 @@ final class CommandWorkerCommand extends Command implements LoggerAwareInterface
 
         $startedAt = new \DateTimeImmutable();
         $startedTimestamp = $startedAt->getTimestamp();
-        $memoryLimit = self::parseSize($input->getOption('memory-limit'));
         $timeLimit = self::parseTime($input->getOption('time-limit'));
         $eventCountLimit = (int) $input->getOption('limit');
         $queueList = (array) $input->getOption('routing-key');
+
+        $memoryLimit = self::parseSize($input->getOption('memory-limit'));
+        $memoryLeakThreshold = self::parseSize($input->getOption('memory-leak'));
+        $previousMemoryThreshold = 0;
+
+        if ($memoryLimit) {
+            $output->writeln(\sprintf("Memory limit set to %d bytes", $memoryLimit));
+        } else {
+            // We REQUIRE a memory limit is set fot he bus to gracefully exit
+            // when we approach that limit: in case of memory leak on each
+            // message, breaking memory limit during process will also break
+            // the transaction, and may also cause monolog logging to be lost.
+            // We do desesperatly need to avoid that at all cost.
+            // Reserving 16M is a huge lot, and business process will probably
+            // never consume that much in a single message (honest guess).
+            if (($value = \ini_get('memory_limit')) && '-1' !== $value) {
+                $memoryLimit = self::parseSize($value);
+                if ($memoryLimit < 1024 * 1024 * 128) {
+                    // Less than 128M, we reserve a percentage.
+                    $memoryLimit = \round($memoryLimit * 0.9);
+                    $output->writeln(\sprintf("PHP memory limit is lower than 128M, reserving 10%%, memory limit set to %d bytes.", $memoryLimit));
+                } else {
+                    // More than 128M, we reserve 16M.
+                    $memoryLimit -= 1024 * 1024 * 16;
+                    $output->writeln(\sprintf("PHP memory limit is higher than 128M, reserving 16M, memory limit set to %d bytes.", $memoryLimit));
+                }
+            } else {
+                $output->writeln("<error>PHP as no memory_limit set, not setting any. Beware you might experience memory leaks.</error>");
+            }
+        }
 
         if (!$queueList) {
             $queueList = ['default'];
@@ -117,10 +147,20 @@ final class CommandWorkerCommand extends Command implements LoggerAwareInterface
 
         $eventDispatcher->addListener(
             WorkerEvent::NEXT,
-            function (WorkerEvent $event) use ($output, $handleTick) {
+            function (WorkerEvent $event) use ($output, $handleTick, &$previousMemoryThreshold, $memoryLeakThreshold) {
                 if ($output->isVerbose()) {
                     $output->writeln(\sprintf("%s - NEXT message: %s.", self::nowAsString(), self::messageAsString($event->getMessage())));
                 }
+
+                $previous = $previousMemoryThreshold;
+                $previousMemoryThreshold = \memory_get_usage(true);
+                if ($memoryLeakThreshold < ($previousMemoryThreshold - $previous)) {
+                    $output->writeln(\sprintf("<error>%s - MEMORY LEAK while message: %s (current consumption: %d bytes).", self::nowAsString(), self::messageAsString($event->getMessage()), $previousMemoryThreshold));
+                }
+                if ($output->isVeryVerbose()) {
+                    $output->writeln(\sprintf("%s - MEMORY: %s.", self::nowAsString(), $previousMemoryThreshold));
+                }
+
                 $handleTick();
             }
         );
@@ -129,6 +169,7 @@ final class CommandWorkerCommand extends Command implements LoggerAwareInterface
             $eventDispatcher->addListener(WorkerEvent::DONE, fn () => $this->servicesResetter->reset());
         }
 
+        $previousMemoryThreshold = \memory_get_usage(true);
         $worker->run();
 
         return 0;
