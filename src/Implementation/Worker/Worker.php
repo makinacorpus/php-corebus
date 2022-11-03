@@ -38,7 +38,7 @@ final class Worker implements LoggerAwareInterface
     ) {
         $this->commandConsumer = $commandConsumer;
         $this->messageConsumer = $messageConsumer;
-        $this->idleSleepTime = $idleSleepTime ?? self::DEFAULT_IDLE_SLEEP_TIME;
+        $this->idleSleepTime = $idleSleepTime ? $idleSleepTime * 1000 : self::DEFAULT_IDLE_SLEEP_TIME;
         $this->limit = $limit;
         $this->logger = new NullLogger();
     }

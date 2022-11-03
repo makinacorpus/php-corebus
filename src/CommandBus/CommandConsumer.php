@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace MakinaCorpus\CoreBus\CommandBus;
 
 /**
- * Consume messages.
+ * CommandBus is the user facing message dispatcher, you send a message through
+ * it, whereas CommandConsummer is the internal message consummer, the system
+ * processes the message through it.
  */
 interface CommandConsumer
 {

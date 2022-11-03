@@ -11,6 +11,7 @@ use Symfony\Component\Filesystem\Exception\IOException;
 class CallableReferenceListPhpDumper
 {
     const DUMPED_NAMESPACE = 'MakinaCorpus\\CoreBus\\Cache\\Type\\Generated';
+
     private string $target;
     private string $directory;
     private string $filename;

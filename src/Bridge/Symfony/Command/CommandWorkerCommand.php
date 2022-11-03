@@ -62,6 +62,7 @@ final class CommandWorkerCommand extends Command implements LoggerAwareInterface
             ->addOption('memory-limit', 'm', InputOption::VALUE_OPTIONAL, "Maximum memory consumption; eg. 128M, 1G, ...", null)
             ->addOption('memory-leak', 'w', InputOption::VALUE_REQUIRED, "Memory leak warning threshold when consuming a message; eg. 128M, 1G, ...", '512K')
             ->addOption('time-limit', 't', InputOption::VALUE_OPTIONAL, "Maximum run time; eg. '1 hour', '2 minutes', ...", null)
+            ->addOption('sleep-time', 's', InputOption::VALUE_OPTIONAL, "Sleep time when IDLE in microseconds", null)
         ;
     }
 
@@ -80,37 +81,15 @@ final class CommandWorkerCommand extends Command implements LoggerAwareInterface
         $eventCountLimit = (int) $input->getOption('limit');
         $queueList = (array) $input->getOption('routing-key');
 
+        if ($sleepTime = $this->parseInt($input->getOption('sleep-time'))) {
+            $output->writeln(\sprintf("Sleep time set to %d ms", $sleepTime));
+        }
+
         // Constraints and statistics.
-        $memoryLimit = self::parseSize($input->getOption('memory-limit'));
+        $memoryLimit = $this->computeMemoryLimit($input->getOption('memory-limit'), $output);
         $memoryLeakThreshold = self::parseSize($input->getOption('memory-leak'));
         $currentMemory = 0;
         $messageCount = 0;
-
-        if ($memoryLimit) {
-            $output->writeln(\sprintf("Memory limit set to %d bytes", $memoryLimit));
-        } else {
-            // We REQUIRE a memory limit is set for the bus to gracefully exit
-            // when we approach that limit: in case of memory leak on each
-            // message, breaking memory limit during process will also break
-            // the transaction, and may also cause monolog logging to be lost.
-            // We do desesperatly need to avoid that at all cost.
-            // Reserving 16M is a huge lot, and business process will probably
-            // never consume that much in a single message (honest guess).
-            if (($value = \ini_get('memory_limit')) && '-1' !== $value) {
-                $memoryLimit = self::parseSize($value);
-                if ($memoryLimit < 1024 * 1024 * 128) {
-                    // Less than 128M, we reserve a percentage.
-                    $memoryLimit = \round($memoryLimit * 0.9);
-                    $output->writeln(\sprintf("PHP memory limit is lower than 128M, reserving 10%%, memory limit set to %d bytes.", $memoryLimit));
-                } else {
-                    // More than 128M, we reserve 16M.
-                    $memoryLimit -= 1024 * 1024 * 16;
-                    $output->writeln(\sprintf("PHP memory limit is higher than 128M, reserving 16M, memory limit set to %d bytes.", $memoryLimit));
-                }
-            } else {
-                $output->writeln("<error>PHP as no memory_limit set, not setting any. Beware you might experience memory leaks.</error>");
-            }
-        }
 
         if (!$queueList) {
             $queueList = ['default'];
@@ -118,7 +97,7 @@ final class CommandWorkerCommand extends Command implements LoggerAwareInterface
 
         $output->writeln(\sprintf("Running bus worker consumming in '%s' routing key(s).", \implode("', '", $queueList)));
 
-        $worker = new Worker($this->commandConsumer, $this->messageConsumerFactory->createConsumer($queueList), null, $eventCountLimit);
+        $worker = new Worker($this->commandConsumer, $this->messageConsumerFactory->createConsumer($queueList), $sleepTime, $eventCountLimit);
         $worker->setLogger($this->logger);
         if ($this->retryStrategy) {
             $worker->setRetryStrategy($this->retryStrategy);
@@ -179,6 +158,44 @@ final class CommandWorkerCommand extends Command implements LoggerAwareInterface
         return 0;
     }
 
+    private static function computeMemoryLimit(?string $userInput, OutputInterface $output): int
+    {
+        $memoryLimit = self::parseSize($userInput);
+
+        if ($memoryLimit) {
+            $output->writeln(\sprintf("Memory limit set to %d bytes", $memoryLimit));
+
+            return $memoryLimit;
+        }
+
+        // We REQUIRE a memory limit is set for the bus to gracefully exit
+        // when we approach that limit: in case of memory leak on each
+        // message, breaking memory limit during process will also break
+        // the transaction, and may also cause monolog logging to be lost.
+        // We do desesperatly need to avoid that at all cost.
+        // Reserving 16M is a huge lot, and business process will probably
+        // never consume that much in a single message (honest guess).
+        if (($value = \ini_get('memory_limit')) && '-1' !== $value) {
+            $memoryLimit = self::parseSize($value);
+
+            if ($memoryLimit < 1024 * 1024 * 128) {
+                // Less than 128M, we reserve a percentage.
+                $memoryLimit = \round($memoryLimit * 0.9);
+                $output->writeln(\sprintf("PHP memory limit is lower than 128M, reserving 10%%, memory limit set to %d bytes.", $memoryLimit));
+
+                return $output;
+            }
+
+            // More than 128M, we reserve 16M.
+            $memoryLimit -= 1024 * 1024 * 16;
+            $output->writeln(\sprintf("PHP memory limit is higher than 128M, reserving 16M, memory limit set to %d bytes.", $memoryLimit));
+
+            return $memoryLimit;
+        }
+
+        $output->writeln("<error>PHP as no memory_limit set, not setting any. Beware you might experience memory leaks.</error>");
+    }
+
     private static function nowAsString(): string
     {
         return (new \DateTime())->format('Y-m-d H:i:s.uP');
@@ -196,6 +213,22 @@ final class CommandWorkerCommand extends Command implements LoggerAwareInterface
             return \sprintf("%s", \get_class($message));
         }
         return \sprintf("%s (%s)", \gettype($message), (string)$message);
+    }
+
+    /**
+     * Parse user input integer value.
+     */
+    private static function parseInt(?string $input): ?int
+    {
+        if ('' === $input || null === $input) {
+            return null;
+        }
+
+        if (!\ctype_digit($input)) {
+            throw new \InvalidArgumentException(\sprintf("Invalid integer: '%s'", $input));
+        }
+
+        return (int) $input;
     }
 
     /**
