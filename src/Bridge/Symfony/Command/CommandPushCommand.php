@@ -66,6 +66,18 @@ final class CommandPushCommand extends Command
         $format = $input->getOption('content-type');
         $data = $input->getOption('content');
 
+        if (!$data) {
+            // Attempt read from STDIN
+            $output->writeln('Reading command from STDIN');
+            $data = \stream_get_contents(STDIN);
+            if (false === $data) {
+                throw new \InvalidArgumentException("No content was provided, and STDIN could not be read");
+            }
+            if (!$data) {
+                $output->writeln('No content found from STDIN');
+            }
+        }
+
         $className = $this->nameMap->toPhpType($commandName, $normalizationTag);
 
         if ($data) {
