@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace MakinaCorpus\CoreBus\Bridge\Symfony\DependencyInjection\Compiler;
 
+use MakinaCorpus\CoreBus\Bridge\Symfony\DependencyInjection\DumpedServiceFactory;
 use MakinaCorpus\CoreBus\Cache\Type\CallableReferenceListPhpDumper;
 use MakinaCorpus\CoreBus\Implementation\Type\ClassParser;
 use MakinaCorpus\CoreBus\Implementation\Type\NullCallableReferenceList;
@@ -61,7 +62,8 @@ final class RegisterCommandHandlerPass implements CompilerPassInterface
             $serviceClassName = $dumper->getDumpedClassName(true);
             $definition = new Definition();
             $definition->setClass($serviceClassName);
-            $definition->setFile($dumper->getFilename());
+            $definition->setFactory([DumpedServiceFactory::class, 'load']);
+            $definition->setArguments([$serviceClassName, $dumper->getFilename()]);
             $container->setDefinition($serviceClassName, $definition);
         }
 
