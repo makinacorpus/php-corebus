@@ -3,7 +3,6 @@
 # options with their default values.
 #
 core_bus:
-
     #
     # Dispatcher and message broker integration.
     #
@@ -26,6 +25,27 @@ core_bus:
         #
         retry_strategy:
             enabled: false
+
+            #
+            # When set to true, if a goat-query serialization failure happens then
+            # the message will be retried without being requeued to the bus with a
+            # reject.
+            #
+            retry_on_database_failure: true
+
+            #
+            # You can manually set an exception list for which to retry without
+            # requeue.
+            #
+            # @todo Not implemented yet.
+            #
+            # retry_exceptions:
+            #     - App\SomeException
+
+            #
+            # Retry without requeue maximum count (accounting for first try).
+            #
+            retry_count: 3
 
     #
     # Transaction manager for handling your database transactions.

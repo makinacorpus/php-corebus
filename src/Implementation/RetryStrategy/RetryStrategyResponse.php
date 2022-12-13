@@ -22,6 +22,9 @@ final class RetryStrategyResponse
     /** Should retry or not. */
     private bool $shouldRetry = false;
 
+    /** Should retry without requeue */
+    private bool $shouldRetryWithoutRequeue = false;
+
     /** Maximum number of retries */
     private int $maxCount = 4;
 
@@ -29,6 +32,17 @@ final class RetryStrategyResponse
     private function __construct(?string $reason = null)
     {
         $this->reason = $reason;
+    }
+
+    /**
+     * Create a retry without requeue response.
+     */
+    public static function retryWithoutRequeue(?string $reason = null): self
+    {
+        $ret = new self($reason);
+        $ret->shouldRetryWithoutRequeue = true;
+
+        return $ret;
     }
 
     /**
@@ -113,5 +127,10 @@ final class RetryStrategyResponse
     public function shouldRetry(): bool
     {
         return $this->shouldRetry;
+    }
+
+    public function shouldRetryWithoutRequeue(): bool
+    {
+        return $this->shouldRetryWithoutRequeue;
     }
 }

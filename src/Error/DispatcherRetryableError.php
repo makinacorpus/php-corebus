@@ -18,6 +18,9 @@ use MakinaCorpus\CoreBus\Implementation\RetryStrategy\RetryStrategyResponse;
  *
  * Our message bus transport, which is agnostic from this namespace, will
  * find out its own Retryable error interface and re-queue event.
+ *
+ * @deprecated
+ *   This exception must disapear.
  */
 class DispatcherRetryableError extends \RuntimeException implements CoreBusError
 {

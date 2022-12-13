@@ -10,17 +10,34 @@ use MakinaCorpus\Message\Envelope;
 
 final class DefaultRetryStrategy implements RetryStrategy
 {
+    private bool $retryWithoutRequeueOnDatabaseFailure = true;
+    private int $retryCount = 3;
+
+    public function __construct(
+        bool $retryWithoutRequeueOnDatabaseFailure = true,
+        int $retryCount = 3
+    ) {
+        $this->retryWithoutRequeueOnDatabaseFailure = $retryWithoutRequeueOnDatabaseFailure;
+        $this->retryCount = $retryCount;
+    }
+
     /**
      * {@inheritdoc}
      */
     public function shouldRetry(Envelope $envelope, \Throwable $error): RetryStrategyResponse
     {
         if ($error instanceof TransactionError) {
-            return RetryStrategyResponse::retry("Transaction serialization failure");
+            if ($this->retryWithoutRequeueOnDatabaseFailure) {
+                return RetryStrategyResponse::retryWithoutRequeue("Transaction serialization failure")->withMaxCount($this->retryCount);
+            }
+
+            return RetryStrategyResponse::retry("Transaction serialization failure")->withMaxCount($this->retryCount);
         }
+
         if ($error instanceof DispatcherRetryableError) {
-            return RetryStrategyResponse::retry("Dispatcher specialized error");
+            return RetryStrategyResponse::retry("Dispatcher specialized error")->withMaxCount($this->retryCount);
         }
+
         /*
          * @todo
          *   Restore this feature using attributes.

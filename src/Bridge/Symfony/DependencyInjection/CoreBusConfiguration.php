@@ -30,6 +30,8 @@ final class CoreBusConfiguration implements ConfigurationInterface
                         ->arrayNode('retry_strategy')
                             ->children()
                                 ->booleanNode('enabled')->defaultFalse()->end()
+                                ->booleanNode('retry_on_database_failure')->defaultTrue()->end()
+                                ->scalarNode('retry_count')->defaultValue(3)->end()
                             ->end()
                         ->end()
                     ->end()

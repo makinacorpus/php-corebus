@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace MakinaCorpus\CoreBus\Tests\Implementation\RetryStrategy;
 
+use Goat\Driver\Error\TransactionError;
 use MakinaCorpus\CoreBus\CommandBus\CommandConsumer;
 use MakinaCorpus\CoreBus\CommandBus\CommandResponsePromise;
 use MakinaCorpus\CoreBus\Error\DispatcherRetryableError;
@@ -34,9 +35,7 @@ final class RetryStrategyCommandConsumerDecoratorTest extends TestCase
             static function (Envelope $envelope) {
                throw new \BadMethodCallException("Message should not have been retried.");
             },
-            static function (Envelope $envelope) {
-                // Do nothing.
-            }
+            static function () {} // Do nothing.
         );
 
         try {
@@ -82,7 +81,7 @@ final class RetryStrategyCommandConsumerDecoratorTest extends TestCase
         self::assertSame($sentMessage, $envelope->getMessage());
         self::assertSame("1", $envelope->getProperty(Property::RETRY_COUNT));
         self::assertSame("100", $envelope->getProperty(Property::RETRY_DELAI));
-        self::assertSame("4", $envelope->getProperty(Property::RETRY_MAX));
+        self::assertSame("7", $envelope->getProperty(Property::RETRY_MAX));
     }
 
     public function testProcessDoesNotAttemptRetryWhenMaxReached(): void
@@ -100,9 +99,7 @@ final class RetryStrategyCommandConsumerDecoratorTest extends TestCase
         $commandConsumer = $this->decorate(
             $commandConsumer,
             static function () { throw new DispatcherRetryableError(); },
-            static function (Envelope $envelope) {
-                // Do nothing.
-            }
+            static function () {} // Do nothing.
         );
 
         $sentEnvelope = Envelope::wrap(new \DateTimeImmutable(), [
@@ -116,11 +113,44 @@ final class RetryStrategyCommandConsumerDecoratorTest extends TestCase
         } catch (\DomainException $e) {}
     }
 
+    public function testDatabaseTransactionErrorMayRetryWithoutRequeue(): void
+    {
+        $decorated = new class () implements CommandConsumer
+        {
+            private int $count = 0;
+
+            public function getCount(): int
+            {
+                return $this->count;
+            }
+
+            public function consumeCommand(object $command): CommandResponsePromise
+            {
+                ++$this->count;
+
+                throw new TransactionError();
+            }
+        };
+
+        $commandConsumer = $this->decorate(
+            $decorated,
+            static function () {}, // Do nothing.
+            static function () {}, // Do nothing.
+        );
+
+        try {
+            $commandConsumer->consumeCommand(new \DateTimeImmutable());
+            self::fail();
+        } catch (TransactionError $e) {}
+
+        self::assertSame(7, $decorated->getCount());
+    }
+
     private function decorate(CommandConsumer $decorated, callable $retryCallback, callable $rejectCallback): CommandConsumer
     {
         return new RetryStrategyCommandConsumerDecorator(
             $decorated,
-            new DefaultRetryStrategy(),
+            new DefaultRetryStrategy(true, 7),
             new class ($retryCallback, $rejectCallback) implements MessageConsumer
             {
                 private $retryCallback;

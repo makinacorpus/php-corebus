@@ -44,29 +44,51 @@ final class RetryStrategyCommandConsumerDecorator implements CommandConsumer, Lo
     public function consumeCommand(object $command): CommandResponsePromise
     {
         $envelope = Envelope::wrap($command);
+        $count = 0;
+        $max = 0;
 
-        try {
-            return $this->decorated->consumeCommand($envelope);
-        } catch (\Throwable $e) {
-            if ($envelope->hasProperty(Property::RETRY_KILLSWITCH)) {
-                $this->logger->debug("RetryStrategyCommandConsumerDecorator: Failure will not be retried, killed by killswitch.", ['exception' => $e]);
+        for ($i = 0; $i < 10; ++$i) { // Avoid infinite loop.
+            try {
+                ++$count;
+
+                return $this->decorated->consumeCommand($envelope);
+            } catch (\Throwable $e) {
+                if ($envelope->hasProperty(Property::RETRY_KILLSWITCH)) {
+                    $this->logger->notice("RetryStrategyCommandConsumerDecorator: Failure will not be retried, killed by killswitch.", ['exception' => $e]);
+
+                    throw $e;
+                }
+
+                $response = $this->retryStrategy->shouldRetry($envelope, $e);
+
+                if ($response->shouldRetryWithoutRequeue()) {
+                    if ($max < 1) {
+                        $max = $response->getMaxCount();
+                    }
+
+                    if (!$max || $max <= $count) {
+                        $this->logger->error("RetryStrategyCommandConsumerDecorator: Failure was locally retryable, failed {count} attempts.", ['exception' => $e, 'count' => $count]);
+
+                        $this->doRequeue($envelope, $response, $e);
+                    } else {
+                        $this->logger->notice("RetryStrategyCommandConsumerDecorator: Failure is locally retryable, retrying ({count}/{max}).", ['exception' => $e, 'count' => $count + 1, 'max' => $max]);
+
+                        continue; // Retry.
+                    }
+                }
+
+                if ($response->shouldRetry()) {
+                    $this->logger->error("RetryStrategyCommandConsumerDecorator: Failure is retryable.", ['exception' => $e]);
+
+                    $this->doRequeue($envelope, $response, $e);
+                } else {
+                    $this->logger->error("RetryStrategyCommandConsumerDecorator: Failure is not retryable.", ['exception' => $e]);
+
+                    $this->doReject($envelope, $e);
+                }
 
                 throw $e;
             }
-
-            $response = $this->retryStrategy->shouldRetry($envelope, $e);
-
-            if ($response->shouldRetry()) {
-                $this->logger->debug("RetryStrategyCommandConsumerDecorator: Failure is retryable.", ['exception' => $e]);
-
-                $this->doRequeue($envelope, $response, $e);
-            } else {
-                $this->logger->debug("RetryStrategyCommandConsumerDecorator: Failure is not retryable.", ['exception' => $e]);
-
-                $this->doReject($envelope, $e);
-            }
-
-            throw $e;
         }
     }
 
