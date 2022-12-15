@@ -37,14 +37,27 @@ final class ContainerEventListenerLocator implements EventListenerLocator, Conta
      */
     public function find(object $event): iterable
     {
-        $references = $this->referenceList->all(\get_class($event));
+        $candidates = [];
+        $className = \get_class($event);
 
-        foreach ($references as $reference) {
-            \assert($reference instanceof CallableReference);
+        // Allow event listeners to react using interfaces.
+        foreach (\class_implements($className) as $interface) {
+            $candidates[] = $interface;
+        }
 
-            $service = $this->container->get($reference->serviceId);
+        // Allow event listeners to react using parent classes.
+        do {
+            $candidates[] = $className;
+        } while ($className = \get_parent_class($className));
 
-            yield static fn (object $command) => $service->{$reference->methodName}($command);
+        foreach ($candidates as $candidate) {
+            foreach ($this->referenceList->all($candidate) as $reference) {
+                \assert($reference instanceof CallableReference);
+
+                $service = $this->container->get($reference->serviceId);
+
+                yield static fn (object $command) => $service->{$reference->methodName}($command);
+            }
         }
     }
 }
