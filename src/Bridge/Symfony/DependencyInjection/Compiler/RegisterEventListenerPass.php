@@ -12,6 +12,7 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Definition;
 use Symfony\Component\DependencyInjection\Reference;
 use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
+use Symfony\Component\DependencyInjection\Compiler\ServiceLocatorTagPass;
 use Symfony\Component\DependencyInjection\Exception\InvalidArgumentException;
 
 final class RegisterEventListenerPass implements CompilerPassInterface
@@ -34,6 +35,7 @@ final class RegisterEventListenerPass implements CompilerPassInterface
             $container->getParameter('kernel.cache_dir')
         );
 
+        $services = [];
         foreach ($container->findTaggedServiceIds('app.handler', true) as $id => $attributes) {
             $definition = $container->getDefinition($id);
             $className = $definition->getClass();
@@ -42,10 +44,10 @@ final class RegisterEventListenerPass implements CompilerPassInterface
                 throw new InvalidArgumentException(\sprintf('Class "%s" used for service "%s" cannot be found.', $className, $id));
             }
 
-            // @todo Later, use a service locator instead.
-            $definition->setPublic(true);
-            $dumper->appendFromClass($className, $id);
-
+            if ($dumper->appendFromClass($className, $id)) {
+                $services[$id] = new Reference($id);
+                $services[$className] = new Reference($className);
+            }
             $this->prepareClass($className, $definition);
         }
 
@@ -69,7 +71,10 @@ final class RegisterEventListenerPass implements CompilerPassInterface
 
         $container
             ->getDefinition('corebus.event.listener.locator.container')
-            ->setArguments([new Reference($serviceClassName)])
+            ->setArguments([
+                new Reference($serviceClassName),
+                ServiceLocatorTagPass::register($container, $services)
+            ])
         ;
     }
 }

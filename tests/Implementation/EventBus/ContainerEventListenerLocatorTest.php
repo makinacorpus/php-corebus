@@ -12,19 +12,18 @@ use MakinaCorpus\CoreBus\Tests\Implementation\Mock\MockEventInterfaceListener;
 use MakinaCorpus\CoreBus\Tests\Implementation\Mock\MockEventListener;
 use MakinaCorpus\CoreBus\Tests\Implementation\Mock\MockEventParentClassListener;
 use PHPUnit\Framework\TestCase;
-use Symfony\Component\DependencyInjection\Container;
+use Symfony\Component\DependencyInjection\ServiceLocator;
 
 final class ContainerEventListenerLocatorTest extends TestCase
 {
     public function testFind(): void
     {
-        $container = new Container();
-        $container->set('mock_listener', new MockEventListener());
-
+        $serviceLocator = new ServiceLocator([
+            'mock_listener' => fn () => new MockEventListener(),
+        ]);
         $locator = new ContainerEventListenerLocator([
             'mock_listener' => MockEventListener::class,
-        ]);
-        $locator->setContainer($container);
+        ], $serviceLocator);
 
         $eventA = new MockEventA();
         $iterable = $locator->find($eventA);
@@ -54,13 +53,12 @@ final class ContainerEventListenerLocatorTest extends TestCase
 
     public function testFindWithInterface(): void
     {
-        $container = new Container();
-        $container->set('mock_listener', new MockEventInterfaceListener());
-
+        $serviceLocator = new ServiceLocator([
+            'mock_listener' => fn () => new MockEventInterfaceListener(),
+        ]);
         $locator = new ContainerEventListenerLocator([
             'mock_listener' => MockEventInterfaceListener::class,
-        ]);
-        $locator->setContainer($container);
+        ], $serviceLocator);
 
         $eventA = new MockEventA();
         $iterable = $locator->find($eventA);
@@ -90,13 +88,12 @@ final class ContainerEventListenerLocatorTest extends TestCase
 
     public function testFindWithParentClass(): void
     {
-        $container = new Container();
-        $container->set('mock_listener', new MockEventParentClassListener());
-
+        $serviceLocator = new ServiceLocator([
+            'mock_listener' => fn () => new MockEventParentClassListener(),
+        ]);
         $locator = new ContainerEventListenerLocator([
             'mock_listener' => MockEventParentClassListener::class,
-        ]);
-        $locator->setContainer($container);
+        ], $serviceLocator);
 
         $eventA = new MockEventA();
         $iterable = $locator->find($eventA);

@@ -11,19 +11,19 @@ use MakinaCorpus\CoreBus\Tests\Implementation\Mock\MockCommandB;
 use MakinaCorpus\CoreBus\Tests\Implementation\Mock\MockCommandC;
 use MakinaCorpus\CoreBus\Tests\Implementation\Mock\MockHandler;
 use PHPUnit\Framework\TestCase;
-use Symfony\Component\DependencyInjection\Container;
+use Symfony\Component\DependencyInjection\ServiceLocator;
 
 final class ContainerCommandHandlerLocatorTest extends TestCase
 {
     public function testFind(): void
     {
-        $container = new Container();
-        $container->set('mock_handler', new MockHandler());
-
+        $serviceLocator = new ServiceLocator([
+            'mock_handler' => fn () => new MockHandler(),
+        ]);
         $locator = new ContainerCommandHandlerLocator([
             'mock_handler' => MockHandler::class,
-        ]);
-        $locator->setContainer($container);
+        ], $serviceLocator);
+
 
         $commandA = new MockCommandA();
         $callback = $locator->find($commandA);

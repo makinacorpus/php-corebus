@@ -8,20 +8,20 @@ use MakinaCorpus\CoreBus\EventBus\EventListenerLocator;
 use MakinaCorpus\CoreBus\Implementation\Type\CallableReference;
 use MakinaCorpus\CoreBus\Implementation\Type\CallableReferenceList;
 use MakinaCorpus\CoreBus\Implementation\Type\RuntimeCallableReferenceList;
-use Symfony\Component\DependencyInjection\ContainerAwareInterface;
-use Symfony\Component\DependencyInjection\ContainerAwareTrait;
+use Symfony\Component\DependencyInjection\ServiceLocator;
 
-final class ContainerEventListenerLocator implements EventListenerLocator, ContainerAwareInterface
+final class ContainerEventListenerLocator implements EventListenerLocator
 {
-    use ContainerAwareTrait;
-
+    private ?ServiceLocator $serviceLocator = null;
     private CallableReferenceList $referenceList;
 
     /**
      * @param array<string,string>|CallableReferenceList $references
      */
-    public function __construct($references)
+    public function __construct($references, ?ServiceLocator $serviceLocator = null)
     {
+        $this->serviceLocator = $serviceLocator;
+
         if ($references instanceof CallableReferenceList) {
             $this->referenceList = $references;
         } else if (\is_array($references)) {
@@ -37,6 +37,10 @@ final class ContainerEventListenerLocator implements EventListenerLocator, Conta
      */
     public function find(object $event): iterable
     {
+        if (!$this->serviceLocator) {
+            throw new \LogicException("Misinitialized event listener locator.");
+        }
+
         $candidates = [];
         $className = \get_class($event);
 
@@ -54,7 +58,7 @@ final class ContainerEventListenerLocator implements EventListenerLocator, Conta
             foreach ($this->referenceList->all($candidate) as $reference) {
                 \assert($reference instanceof CallableReference);
 
-                $service = $this->container->get($reference->serviceId);
+                $service = $this->serviceLocator->get($reference->serviceId);
 
                 yield static fn (object $command) => $service->{$reference->methodName}($command);
             }

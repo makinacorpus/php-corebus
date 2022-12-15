@@ -34,7 +34,6 @@ services:
 
     corebus.event.listener.locator.container:
         class: MakinaCorpus\CoreBus\Implementation\EventBus\ContainerEventListenerLocator
-        calls: [[setContainer, ["@service_container"]]]
         arguments: [[]]
 
     corebus.event.listener.locator:
@@ -77,7 +76,6 @@ services:
 
     corebus.command.handler.locator.container:
         class: MakinaCorpus\CoreBus\Implementation\CommandBus\ContainerCommandHandlerLocator
-        calls: [[setContainer, ["@service_container"]]]
         arguments: [[]]
 
     corebus.command.handler_locator:

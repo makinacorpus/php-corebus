@@ -54,14 +54,21 @@ class CallableReferenceListPhpDumper
 
     /**
      * Append items from the given handler class.
+     *
+     * @return int
+     *   Count of found handlers.
      */
-    public function appendFromClass(string $handlerClassName, ?string $handlerServiceId = null): void
+    public function appendFromClass(string $handlerClassName, ?string $handlerServiceId = null): int
     {
         $classParser = new ClassParser($this->target);
 
+        $count = 0;
         foreach ($classParser->lookup($handlerClassName) as $reference) {
             $this->append($reference);
+            ++$count;
         }
+
+        return $count;
     }
 
     /**
