@@ -53,6 +53,18 @@ final class CommandPushCommand extends Command
             ->addOption('content', 'c', InputOption::VALUE_REQUIRED, 'Content formatted using the given --content-type format (default is JSON)')
             ->addOption('async', 'a', InputOption::VALUE_NONE, 'Only pushes the event into the bus for later asynchronous execution')
             ->addOption('tag', null, InputOption::VALUE_REQUIRED, 'Normalization tag name (default is "command")')
+            ->addUsage(<<<TXT
+            App\\\My\\\Namespace\\\Command\\\DoThisCommand <<'EOT'
+            {
+                "firstAgrument": "argument value",
+                "secondArgumentAsObject": {
+                    "one": "foo",
+                    "two": "bar",
+                    "three": "baz"
+                },
+            }
+            EOT
+            TXT)
         ;
     }
 
