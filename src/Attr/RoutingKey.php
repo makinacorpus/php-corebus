@@ -13,15 +13,15 @@ namespace MakinaCorpus\CoreBus\Attr;
 #[\Attribute]
 final class RoutingKey extends Command
 {
-    private string $routingKey;
+    private string $name;
 
-    public function __construct(string $routingKey)
+    public function __construct(string $name)
     {
-        $this->routingKey = $routingKey;
+        $this->name = $name;
     }
 
     public function getRoutingKey(): string
     {
-        return $this->routingKey;
+        return $this->name;
     }
 }

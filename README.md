@@ -37,7 +37,7 @@ Other various features:
 
 ## Basic design
 
-Expected runtime flow is the following:
+Expected runtime flow of your application is the following:
 
  - Commands may be dispatched to trigger writes in the system.
  - Commands are always asynchronously handled, they may return a response.
@@ -95,30 +95,14 @@ implementations, in the opposite, is encouraged implementing its own.
 
 # Roadmap
 
-## Short-term
-
- - [x] Import and rewrite MessageBroker from `makinacorpus/goat`, or create a new package for it.
- - [x] Write a dispatcher implementation that uses MessageBroker.
- - [x] Import and rewrite RetryStrategy from `makinacorpus/goat`.
- - [x] Import and rewrite RetryDispatcherDecorator from `makinacorpus/goat`.
- - [x] Plug RetryDispatcherDecorator via Symfony bundle.
- - [x] Import and rewrite the Worker from `makinacorpus/goat`.
- - [x] Plug worker as a Symfony command.
- - [ ] Write proper documentation.
-
-## Middle-term
-
  - [ ] Implement profiling decorator for event bus using `makinacorpus/profiling`.
  - [ ] Implement profiling decorator for command bus using `makinacorpus/profiling`.
-
-## Long-term
-
  - [ ] Allow multiple message brokers to co-exist, one for each queue.
- - [ ] Discriminate queues in Symfony commands.
  - [ ] Implement dead letter queue routing.
- - [ ] Add message routing capabilities via the broker.
  - [ ] Create a retry strategy chain for having more than one instance.
  - [ ] Implement retry strategy using our attributes.
+ - [ ] Configurable per-exception type retry strategry.
+ - [ ] Implement an argument resolver for command handlers and event listeners.
 
 # Setup
 
@@ -127,7 +111,7 @@ implementations, in the opposite, is encouraged implementing its own.
 There is no standalone setup guide for now. Refer to provided Symfony
 configuration for a concrete example.
 
-## Using Symfony
+## Symfony
 
 Simply enable the bundle in your `config/bundles.php` file:
 
@@ -139,30 +123,8 @@ return [
 
 ```
 
-You may add an additional `config/packages/corebus.yaml` file, althought
-configuration options remain very limited at this time:
-
-```yaml
-corebus:
-    #
-    # Default adapter.
-    #
-    # Since only the "goat" one is implemented, this is the default value
-    # so in fact, you probably should not write this.
-    #
-    adapter: goat
-
-    #
-    # Adapter options.
-    #
-    # All values here are arbitrary and will depend from the adapter.
-    # As of today, the only existing option is "event_store" (boolean)
-    # for the "goat" adapter, which plugs or unplugs the event store
-    # onto the dispatcher.
-    #
-    adapter_options:
-        event_store: true
-```
+Then cut and paste `src/Bridge/Symfony/Resources/example/corebus.sample.yaml`
+file into your `config/packages/` folder, and edit it.
 
 # Usage
 
@@ -173,9 +135,6 @@ Commands are plain PHP object and don't require any dependency.
 Just write a Data Transport Object:
 
 ```php
-
-declare(strict_types=1);
-
 namespace App\Domain\SomeBusiness\Command;
 
 final class SayHelloCommand
@@ -192,9 +151,6 @@ final class SayHelloCommand
 Same goes with events, so just write:
 
 ```php
-
-declare(strict_types=1);
-
 namespace App\Domain\SomeBusiness\Event;
 
 final class HelloWasSaidEvent
@@ -213,9 +169,6 @@ final class HelloWasSaidEvent
 Tie a single command handler:
 
 ```php
-
-declare(strict_types=1);
-
 namespace App\Domain\SomeBusiness\Handler;
 
 use MakinaCorpus\CoreBus\CommandBus\AbstractCommandHandler;
@@ -251,9 +204,6 @@ You may also write as many event listeners as you wish, then even
 may emit events themselves:
 
 ```php
-
-declare(strict_types=1);
-
 namespace App\Domain\SomeBusiness\Listener;
 
 use MakinaCorpus\CoreBus\EventBus\EventListener;
@@ -328,9 +278,6 @@ either extend the base class, or use the attributes.
 Tie a single command handler:
 
 ```php
-
-declare(strict_types=1);
-
 namespace App\Domain\SomeBusiness\Handler;
 
 use MakinaCorpus\CoreBus\EventBus\EventBusAware;
@@ -359,9 +306,6 @@ You may also write as many event listeners as you wish, then even
 may emit events themselves:
 
 ```php
-
-declare(strict_types=1);
-
 namespace App\Domain\SomeBusiness\Listener;
 
 final class SayHello
@@ -379,8 +323,53 @@ final class SayHello
 }
 ```
 
-If you correctly plug the Symfony container machinery, glue will be
-completely transparent.
+Using Symfony container machinery, no configuration is needed for this to work.
+
+# Symfony commands
+
+## Push a message into the bus
+
+Pushing a message is as simple as:
+
+```sh
+bin/console corebus:push CommandName <<'EOT'
+{
+    "message": "contents"
+}
+EOT
+```
+
+## Run worker process
+
+Running the worker process is as simple as:
+
+```sh
+bin/console corebus:worker -vv
+```
+
+If you set `-vvv` you will obtain a very verbose output and is a very bad idea
+to do in any other environment than your development machine.
+
+Running using `-vv` will output a single line for every message being consumed
+including some time and memory information. Exceptions traces when a message fail
+will be displayed fully in output. This is a good setting for using it with
+`systemd` or a `docker` container that will pipe the output into logs.
+
+Not setting any `-v` flag will be equivalent to `-vv` but output will only
+happen in monolog, under the `corebus` channel.
+
+Additionally, you may tweak using the following options:
+
+ - `--limit=X`: only process X messages and die,
+ - `--routing-key=QUEUE_NAME`: only process messages in the `QUEUE_NAME` queue,
+ - `--memory-limit=128M`: when PHP memory limit exceeds the given limit, die,
+   per default the process will use current PHP limit minus 16M, in order to
+   avoid PHP memory limit reached errors during message processing,
+ - `--memory-leak=512K`: warn in output when a single message consumption
+   doesn't free completely memory once finished, with the given threshold,
+ - `--sleep-time=X`: wait for X microseconds between two messages when there is
+   none left to consume before retrying a bus fetch. This may be ignored by some
+   implementations in the future.
 
 # Using attributes
 
@@ -390,20 +379,25 @@ event behaviour without tainting the domain code.
 
 ## Command attributes
 
- - `#[MakinaCorpus\CoreBus\Attr\Async]` forces the command to
-   always be dispatched asynchronously.
-
  - `#[MakinaCorpus\CoreBus\Attr\NoTransaction]` disables transaction
    handling for the command. Use it wisely.
 
- - `#[MakinaCorpus\CoreBus\Attr\Retry(?int)]` allows the command to
+ - `#[MakinaCorpus\CoreBus\Attr\RoutingKey(name: string)]` allows you to route
+   the command via the given *routing key* (or *queue name*). Default when this
+   attribute is not specified is `default`.
+
+ - `#[MakinaCorpus\CoreBus\Attr\Async]` forces the command to
+   always be dispatched asynchronously.
+   Warning, this is not implemented yet, and is an empty shell.
+
+ - `#[MakinaCorpus\CoreBus\Attr\Retry(count: ?int)]` allows the command to
    be retried in case an error happen. First parameter is the number of retries
    allowed, default is `3`.
    Warning, this is not implemented yet, and is an empty shell.
 
 ## Domain event attributes.
 
- - `#[MakinaCorpus\CoreBus\Attr\Aggregate(string, ?string)]`
+ - `#[MakinaCorpus\CoreBus\Attr\Aggregate(property: string, type: ?string)]`
    allows the developer to explicitely tell which aggregate (entity or model)
    this event targets. First argument must be a property name of the event that
    is the aggregate identifier, second argument is optional, and is the target
@@ -431,38 +425,3 @@ Using this, you can use interfaces for matching instead of concrete classes.
 
 Any interface in this package is a service in the dependency injection container
 you will use. You may replace or decorate any of them.
-
-# Future work
-
-## Provide a bare PostgreSQL message broker implementation
-
-Because when you have simple needs, you need simple implementations, and the
-current `makinacorpus/goat` implementation is too complex.
-
-## Add a GenericCommand class
-
-### Goal
-
-This class will be a simple but dynamic DTO whoses values are dynamically
-hydrated as an array from the decoded command input.
-
-This class will yield its logical name and raw values.
-
-This class in conjunction with the `Handler` attribute will allow developers
-to define and consume commands without writing their equivalent PHP classes.
-
-Downside of using such generic command class is that the user will not be able
-to use access or any other attributes on their commands.
-
-### Generic command definition
-
-A new command registry will carry all user-defined commands, using their logical
-names as keys, and their mapped PHP class. For generic commands, it may also
-carry values list and values types, for hydration. This will pave the way for an
-automatic input data validation based upon the definition.
-
-## Handler argument resolver
-
-This pluggable component will allow users to rely upon automatic service
-injection as handler method typed arguments. Of course implementation and
-details will depend upon the framework implementation.
