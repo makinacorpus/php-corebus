@@ -93,17 +93,6 @@ Everything is hidden behind interfaces and different implementations are easy
 to implement. Your projects are not required to choose either one of those
 implementations, in the opposite, is encouraged implementing its own.
 
-# Roadmap
-
- - [ ] Implement profiling decorator for event bus using `makinacorpus/profiling`.
- - [ ] Implement profiling decorator for command bus using `makinacorpus/profiling`.
- - [ ] Allow multiple message brokers to co-exist, one for each queue.
- - [ ] Implement dead letter queue routing.
- - [ ] Create a retry strategy chain for having more than one instance.
- - [ ] Implement retry strategy using our attributes.
- - [ ] Configurable per-exception type retry strategry.
- - [ ] Implement an argument resolver for command handlers and event listeners.
-
 # Setup
 
 ## Standalone
@@ -344,13 +333,13 @@ EOT
 Running the worker process is as simple as:
 
 ```sh
-bin/console corebus:worker -vv
+bin/console corebus:worker -v
 ```
 
-If you set `-vvv` you will obtain a very verbose output and is a very bad idea
+If you set `-vv` you will obtain a very verbose output and is a very bad idea
 to do in any other environment than your development machine.
 
-Running using `-vv` will output a single line for every message being consumed
+Running using `-v` will output a single line for every message being consumed
 including some time and memory information. Exceptions traces when a message fail
 will be displayed fully in output. This is a good setting for using it with
 `systemd` or a `docker` container that will pipe the output into logs.
@@ -425,3 +414,15 @@ Using this, you can use interfaces for matching instead of concrete classes.
 
 Any interface in this package is a service in the dependency injection container
 you will use. You may replace or decorate any of them.
+
+# Roadmap
+
+ - [ ] Implement profiling decorator for event bus using `makinacorpus/profiling`.
+ - [ ] Implement profiling decorator for command bus using `makinacorpus/profiling`.
+ - [ ] Allow multiple message brokers to co-exist, one for each queue.
+ - [ ] Implement dead letter queue routing.
+ - [ ] Create a retry strategy chain for having more than one instance.
+ - [ ] Implement retry strategy using our attributes.
+ - [ ] Configurable per-exception type retry strategry.
+ - [ ] Implement an argument resolver for command handlers and event listeners.
+ 
