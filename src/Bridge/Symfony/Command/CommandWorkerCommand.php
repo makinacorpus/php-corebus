@@ -193,7 +193,9 @@ final class CommandWorkerCommand extends Command implements LoggerAwareInterface
             return $memoryLimit;
         }
 
-        $output->writeln("<error>PHP as no memory_limit set, not setting any. Beware you might experience memory leaks.</error>");
+        $output->writeln("<error>PHP as no memory_limit set, not setting any. Beware you might experience memory leaks, value is set to 1G.</error>");
+
+        return 1024 * 1024 * 1024;
     }
 
     private static function nowAsString(): string
