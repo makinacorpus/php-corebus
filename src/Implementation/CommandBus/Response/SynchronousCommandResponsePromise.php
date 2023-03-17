@@ -10,27 +10,27 @@ use MakinaCorpus\CoreBus\CommandBus\Error\CommandResponseError;
 /**
  * Promise for command bus that run synchronously.
  */
-final class SynchronousCommandResponsePromise implements CommandResponsePromise
+final class SynchronousCommandResponsePromise extends AbstractCommandResponsePromise
 {
     private $response = null;
     private $error = null;
     private bool $isError = false;
 
-    private function __construct($response, $error, bool $isError = false)
+    private function __construct($response, $error, bool $isError = false, ?array $properties = null)
     {
         $this->response = $response;
         $this->error = $error;
         $this->isError = $isError;
     }
 
-    public static function success($response): CommandResponsePromise
+    public static function success($response, ?array $properties = null): CommandResponsePromise
     {
-        return new self($response, null, false);
+        return new self($response, null, false, $properties);
     }
 
-    public static function error($error): CommandResponsePromise
+    public static function error($error, ?array $properties = null): CommandResponsePromise
     {
-        return new self(null, $error, true);
+        return new self(null, $error, true, $properties);
     }
 
     /**

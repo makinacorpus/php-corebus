@@ -49,8 +49,13 @@ final class MessagePublisherCommandBusAdapter implements CommandBus
             }
         }
 
-        $this->messagePublisher->dispatch(Envelope::wrap($command), $routingKey);
+        $envelope = Envelope::wrap($command);
+        if ($routingKey) {
+            $envelope = $envelope->withProperties(['routing_key' => $routingKey]);
+        }
 
-        return new NeverCommandResponsePromise();
+        $this->messagePublisher->dispatch($envelope, $routingKey);
+
+        return new NeverCommandResponsePromise($envelope->getProperties());
     }
 }

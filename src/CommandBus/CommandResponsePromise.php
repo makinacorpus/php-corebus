@@ -25,6 +25,11 @@ interface CommandResponsePromise
     public function get();
 
     /**
+     * Get sent message properties.
+     */
+    public function getProperties(): Properties;
+
+    /**
      * Is response ready.
      */
     public function isReady(): bool;

@@ -4,13 +4,12 @@ declare(strict_types=1);
 
 namespace MakinaCorpus\CoreBus\Implementation\CommandBus\Response;
 
-use MakinaCorpus\CoreBus\CommandBus\CommandResponsePromise;
 use MakinaCorpus\CoreBus\CommandBus\Error\CommandResponseNotReadyError;
 
 /**
  * Response for bus that cannot poll handler result.
  */
-final class NeverCommandResponsePromise implements CommandResponsePromise
+final class NeverCommandResponsePromise extends AbstractCommandResponsePromise
 {
     /**
      * {@inheritdoc}
