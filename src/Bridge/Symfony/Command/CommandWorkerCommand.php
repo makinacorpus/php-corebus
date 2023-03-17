@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace MakinaCorpus\CoreBus\Bridge\Symfony\Command;
 
 use MakinaCorpus\CoreBus\CommandBus\CommandConsumer;
-use MakinaCorpus\CoreBus\Implementation\RetryStrategy\RetryStrategy;
-use MakinaCorpus\CoreBus\Implementation\Worker\Worker;
-use MakinaCorpus\CoreBus\Implementation\Worker\WorkerEvent;
+use MakinaCorpus\CoreBus\CommandBus\RetryStrategy\RetryStrategy;
+use MakinaCorpus\CoreBus\CommandBus\Worker\Worker;
+use MakinaCorpus\CoreBus\CommandBus\Worker\WorkerEvent;
 use MakinaCorpus\Message\Envelope;
 use MakinaCorpus\MessageBroker\MessageConsumerFactory;
 use Psr\Log\LoggerAwareInterface;

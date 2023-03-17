@@ -17,7 +17,7 @@ services:
     #
     corebus.retry_strategy.default:
         public: false
-        class: MakinaCorpus\CoreBus\Implementation\RetryStrategy\DefaultRetryStrategy
+        class: MakinaCorpus\CoreBus\CommandBus\RetryStrategy\DefaultRetryStrategy
 
     corebus.retry_strategy:
         alias: corebus.retry_strategy.default

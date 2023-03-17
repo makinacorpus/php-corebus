@@ -5,9 +5,9 @@ declare (strict_types=1);
 namespace MakinaCorpus\CoreBus\Bridge\GoatQuery;
 
 use Goat\Runner\Runner;
-use MakinaCorpus\CoreBus\Implementation\Transaction\Transaction;
-use MakinaCorpus\CoreBus\Implementation\Transaction\TransactionManager;
-use MakinaCorpus\CoreBus\Implementation\Transaction\Error\TransactionAlreadyRunningError;
+use MakinaCorpus\CoreBus\Transaction\Transaction;
+use MakinaCorpus\CoreBus\Transaction\TransactionManager;
+use MakinaCorpus\CoreBus\Transaction\Error\TransactionAlreadyRunningError;
 
 final class GoatQueryTransactionManager implements TransactionManager
 {

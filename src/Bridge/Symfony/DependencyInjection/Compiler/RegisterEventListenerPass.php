@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace MakinaCorpus\CoreBus\Bridge\Symfony\DependencyInjection\Compiler;
 
 use MakinaCorpus\CoreBus\Bridge\Symfony\DependencyInjection\DumpedServiceFactory;
-use MakinaCorpus\CoreBus\Cache\Type\CallableReferenceListPhpDumper;
-use MakinaCorpus\CoreBus\Implementation\Type\ClassParser;
-use MakinaCorpus\CoreBus\Implementation\Type\NullCallableReferenceList;
+use MakinaCorpus\CoreBus\Cache\CallableReferenceListPhpDumper;
+use MakinaCorpus\CoreBus\Cache\ClassParser;
+use MakinaCorpus\CoreBus\Cache\NullCallableReferenceList;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Definition;
 use Symfony\Component\DependencyInjection\Reference;

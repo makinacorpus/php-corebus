@@ -5,8 +5,8 @@ declare (strict_types=1);
 namespace MakinaCorpus\CoreBus\Bridge\GoatQuery;
 
 use Goat\Runner\Transaction as RunnerTransaction;
-use MakinaCorpus\CoreBus\Implementation\Transaction\Transaction;
-use MakinaCorpus\CoreBus\Implementation\Transaction\Error\TransactionAlreadyClosedError;
+use MakinaCorpus\CoreBus\Transaction\Transaction;
+use MakinaCorpus\CoreBus\Transaction\Error\TransactionAlreadyClosedError;
 
 final class GoatQueryTransaction implements Transaction
 {

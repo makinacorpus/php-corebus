@@ -6,10 +6,10 @@ namespace MakinaCorpus\CoreBus\Tests\Bridge\EventStore;
 
 use MakinaCorpus\CoreBus\Bridge\EventStore\EventInfoExtratorChain;
 use MakinaCorpus\CoreBus\Bridge\EventStore\EventStoreEventBusDecorator;
-use MakinaCorpus\CoreBus\Implementation\EventBus\NullEventBus;
-use MakinaCorpus\CoreBus\Tests\Implementation\Mock\MockCommandAsEvent;
-use MakinaCorpus\CoreBus\Tests\Implementation\Mock\MockEventNoStore;
-use MakinaCorpus\CoreBus\Tests\Implementation\Mock\MockEventStore;
+use MakinaCorpus\CoreBus\EventBus\Bus\NullEventBus;
+use MakinaCorpus\CoreBus\Tests\Mock\MockCommandAsEvent;
+use MakinaCorpus\CoreBus\Tests\Mock\MockEventNoStore;
+use MakinaCorpus\CoreBus\Tests\Mock\MockEventStore;
 use MakinaCorpus\EventStore\Event;
 use MakinaCorpus\EventStore\Projector\Runtime\RuntimePlayer;
 use MakinaCorpus\EventStore\Testing\DummyArrayEventStore;

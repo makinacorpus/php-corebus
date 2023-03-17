@@ -8,7 +8,7 @@ use MakinaCorpus\CoreBus\Attr\RoutingKey;
 use MakinaCorpus\CoreBus\Attribute\AttributeLoader;
 use MakinaCorpus\CoreBus\CommandBus\CommandBus;
 use MakinaCorpus\CoreBus\CommandBus\CommandResponsePromise;
-use MakinaCorpus\CoreBus\Implementation\CommandBus\Response\NeverCommandResponsePromise;
+use MakinaCorpus\CoreBus\CommandBus\Response\NeverCommandResponsePromise;
 use MakinaCorpus\Message\Envelope;
 use MakinaCorpus\Message\Property;
 use MakinaCorpus\MessageBroker\MessagePublisher;

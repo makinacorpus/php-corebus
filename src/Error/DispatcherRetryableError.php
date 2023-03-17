@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace MakinaCorpus\CoreBus\Error;
 
-use MakinaCorpus\CoreBus\Implementation\RetryStrategy\RetryStrategyResponse;
+use MakinaCorpus\CoreBus\CommandBus\RetryStrategy\RetryStrategyResponse;
 
 /**
  * Error is retryable.

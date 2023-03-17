@@ -6,8 +6,8 @@ namespace MakinaCorpus\CoreBus\Tests\Bridge\Symfony\Serializer\Normalizer;
 
 use MakinaCorpus\CoreBus\Bridge\Symfony\Serializer\Normalizer\MultiCommandNormalizer;
 use MakinaCorpus\CoreBus\CommandBus\Transaction\MultiCommand;
-use MakinaCorpus\CoreBus\Tests\Implementation\Mock\MockCommandA;
-use MakinaCorpus\CoreBus\Tests\Implementation\Mock\MockCommandB;
+use MakinaCorpus\CoreBus\Tests\Mock\MockCommandA;
+use MakinaCorpus\CoreBus\Tests\Mock\MockCommandB;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Serializer\Serializer;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;

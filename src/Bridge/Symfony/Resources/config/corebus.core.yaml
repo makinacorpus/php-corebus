@@ -17,13 +17,13 @@ services:
     #
 
     corebus.transaction.manager.null:
-        class: MakinaCorpus\CoreBus\Implementation\Transaction\NullTransactionManager
+        class: MakinaCorpus\CoreBus\Transaction\NullTransactionManager
 
     corebus.transaction.manager:
         alias: corebus.transaction.manager.null
 
     corebus.event_buffer.manager.array:
-        class: MakinaCorpus\CoreBus\Implementation\EventBus\ArrayEventBufferManager
+        class: MakinaCorpus\CoreBus\EventBus\EventBuffer\ArrayEventBufferManager
 
     corebus.event_buffer.manager:
         alias: corebus.event_buffer.manager.array
@@ -33,17 +33,17 @@ services:
     #
 
     corebus.event.listener.locator.container:
-        class: MakinaCorpus\CoreBus\Implementation\EventBus\ContainerEventListenerLocator
+        class: MakinaCorpus\CoreBus\EventBus\Bus\ContainerEventListenerLocator
         arguments: [[]]
 
     corebus.event.listener.locator:
         alias: corebus.event.listener.locator.container
 
     corebus.event.bus.null:
-        class: MakinaCorpus\CoreBus\Implementation\EventBus\NullEventBus
+        class: MakinaCorpus\CoreBus\EventBus\Bus\NullEventBus
 
     corebus.event.bus.memory:
-        class: MakinaCorpus\CoreBus\Implementation\EventBus\MemoryEventBus
+        class: MakinaCorpus\CoreBus\EventBus\Bus\MemoryEventBus
         arguments:
             - "@corebus.event.listener.locator"
 
@@ -57,34 +57,52 @@ services:
     # Command buses.
     #
 
-    corebus.command.bus.passthrough:
-        class: MakinaCorpus\CoreBus\Implementation\CommandBus\PassthroughCommandBus
+    corebus.command.bus.synchronous:
+        class: MakinaCorpus\CoreBus\CommandBus\Bus\PassthroughCommandBus
         arguments:
             - "@corebus.command.consumer"
         tags:
             - { name: "monolog.logger", channel: "corebus" }
 
     corebus.command.bus.asynchronous:
-        alias: corebus.command.bus.passthrough
+        class: MakinaCorpus\CoreBus\CommandBus\Bus\PassthroughCommandBus
+        arguments:
+            - "@corebus.command.consumer"
+        tags:
+            - { name: "monolog.logger", channel: "corebus" }
 
-    corebus.command.bus.synchronous:
-        alias: corebus.command.bus.passthrough
+    #
+    # Command publishers.
+    #
+
+    corebus.command.publisher.passthrough:
+        class: MakinaCorpus\CoreBus\CommandBus\Bus\PassthroughCommandBus
+        arguments:
+            - "@corebus.command.consumer"
+        tags:
+            - { name: "monolog.logger", channel: "corebus" }
+
+    corebus.command.publisher.asynchronous:
+        alias: corebus.command.publisher.passthrough
+
+    corebus.command.publisher.synchronous:
+        alias: corebus.command.publisher.passthrough
 
     #
     # Authorization checker
     #
 
     corebus.command.authorization_checker:
-        class: MakinaCorpus\CoreBus\Implementation\CommandBus\CommandAuthorizationCheckerChain
+        class: MakinaCorpus\CoreBus\CommandBus\Authorization\CommandAuthorizationCheckerChain
         arguments: []
 
     corebus.command.bus.asynchronous.authorization:
-        class: MakinaCorpus\CoreBus\Implementation\CommandBus\AuthorizationCommandBusDecorator
+        class: MakinaCorpus\CoreBus\CommandBus\Bus\AuthorizationCommandBusDecorator
         decorates: corebus.command.bus.asynchronous
         arguments: ['@corebus.command.authorization_checker', '@.inner']
 
     corebus.command.bus.synchronous.authorization:
-        class: MakinaCorpus\CoreBus\Implementation\CommandBus\AuthorizationCommandBusDecorator
+        class: MakinaCorpus\CoreBus\CommandBus\Bus\AuthorizationCommandBusDecorator
         decorates: corebus.command.bus.synchronous
         arguments: ['@corebus.command.authorization_checker', '@.inner']
 
@@ -93,21 +111,21 @@ services:
     #
 
     corebus.command.handler.locator.container:
-        class: MakinaCorpus\CoreBus\Implementation\CommandBus\ContainerCommandHandlerLocator
+        class: MakinaCorpus\CoreBus\CommandBus\Bus\ContainerCommandHandlerLocator
         arguments: [[]]
 
     corebus.command.handler_locator:
         alias: corebus.command.handler.locator.container
 
     corebus.command.consumer.default:
-        class: MakinaCorpus\CoreBus\Implementation\CommandBus\DefaultCommandConsumer
+        class: MakinaCorpus\CoreBus\CommandBus\Consumer\DefaultCommandConsumer
         arguments:
             - "@corebus.command.handler_locator"
         tags:
             - { name: "monolog.logger", channel: "corebus" }
 
     corebus.command.consumer.transactional:
-        class: MakinaCorpus\CoreBus\Implementation\CommandBus\TransactionalCommandConsumer
+        class: MakinaCorpus\CoreBus\CommandBus\Consumer\TransactionalCommandConsumer
         arguments:
             - "@corebus.command.consumer.default"
             - "@corebus.event.bus.internal"

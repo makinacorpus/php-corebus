@@ -6,9 +6,9 @@ namespace MakinaCorpus\CoreBus\Tests\Bridge\EventStore;
 
 use MakinaCorpus\CoreBus\Bridge\EventStore\EventInfoExtratorChain;
 use MakinaCorpus\CoreBus\Bridge\EventStore\EventStoreCommandConsumerDecorator;
-use MakinaCorpus\CoreBus\Implementation\CommandBus\NullCommandConsumer;
-use MakinaCorpus\CoreBus\Tests\Implementation\Mock\MockCommandA;
-use MakinaCorpus\CoreBus\Tests\Implementation\Mock\MockCommandAsEvent;
+use MakinaCorpus\CoreBus\CommandBus\Consumer\NullCommandConsumer;
+use MakinaCorpus\CoreBus\Tests\Mock\MockCommandA;
+use MakinaCorpus\CoreBus\Tests\Mock\MockCommandAsEvent;
 use MakinaCorpus\EventStore\Testing\DummyArrayEventStore;
 use PHPUnit\Framework\TestCase;
 

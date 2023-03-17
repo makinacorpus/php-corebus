@@ -10,7 +10,7 @@ namespace MakinaCorpus\CoreBus\CommandBus;
  * This API is unused in core features, it is meant to be plugged at command
  * input time, which is done using a command bus decorator.
  *
- * @see \MakinaCorpus\CoreBus\Implementation\CommandBus\AuthorizationCommandBusDecorator
+ * @see \MakinaCorpus\CoreBus\CommandBus\Bus\AuthorizationCommandBusDecorator
  */
 interface CommandAuthorizationChecker
 {

@@ -7,7 +7,7 @@ namespace MakinaCorpus\CoreBus\Bridge\Testing;
 use MakinaCorpus\CoreBus\CommandBus\CommandBus;
 use MakinaCorpus\CoreBus\CommandBus\CommandResponsePromise;
 use MakinaCorpus\CoreBus\CommandBus\SynchronousCommandBus;
-use MakinaCorpus\CoreBus\Implementation\CommandBus\Response\NeverCommandResponsePromise;
+use MakinaCorpus\CoreBus\CommandBus\Response\NeverCommandResponsePromise;
 
 class MockCommandBus implements SynchronousCommandBus
 {

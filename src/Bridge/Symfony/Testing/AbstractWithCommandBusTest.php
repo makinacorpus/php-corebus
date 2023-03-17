@@ -10,7 +10,7 @@ use MakinaCorpus\CoreBus\Bridge\Testing\MockSynchronousCommandBus;
 use MakinaCorpus\CoreBus\CommandBus\CommandBus;
 use MakinaCorpus\CoreBus\CommandBus\CommandResponsePromise;
 use MakinaCorpus\CoreBus\CommandBus\SynchronousCommandBus;
-use MakinaCorpus\CoreBus\Implementation\CommandBus\Response\NeverCommandResponsePromise;
+use MakinaCorpus\CoreBus\CommandBus\Response\NeverCommandResponsePromise;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 
 /**
