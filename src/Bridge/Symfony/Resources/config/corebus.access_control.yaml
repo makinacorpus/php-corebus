@@ -1,0 +1,21 @@
+#
+# Default sample configuration for corebus services.
+#
+# Usually, you probably will not have to make much modification if you with
+# to keep a purely synchronous application.
+#
+# This file must be loaded before other defined in this same directory.
+#
+services:
+    _defaults:
+        autowire: true
+        autoconfigure: true
+        public: false
+
+    #
+    # Override this service in order to implement your own retry strategy.
+    #
+    corebus.command.authorization_checker.access_control:
+        public: false
+        class: MakinaCorpus\CoreBus\Bridge\AccessControl\AccessControlCommandAuthorizationChecker
+        tags: ['corebus.authorization_checker']

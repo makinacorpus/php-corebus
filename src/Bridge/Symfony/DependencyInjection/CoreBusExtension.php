@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace MakinaCorpus\CoreBus\Bridge\Symfony\DependencyInjection;
 
 use Goat\Query\Symfony\GoatQueryBundle;
+use MakinaCorpus\AccessControl\Bridge\Symfony\AccessControlBundle;
 use MakinaCorpus\CoreBus\Bridge\EventStore\EventStoreCommandConsumerDecorator;
 use MakinaCorpus\CoreBus\Bridge\EventStore\EventStoreEventBusDecorator;
 use MakinaCorpus\EventStore\Bridge\Symfony\EventStoreBundle;
@@ -31,6 +32,7 @@ final class CoreBusExtension extends Extension
         $config = $this->processConfiguration($configuration, $configs);
 
         $kernelBundles = $container->getParameter('kernel.bundles');
+        $accessControlDetected = \in_array(AccessControlBundle::class, $kernelBundles);
         $eventStoreBundleDetected = \in_array(EventStoreBundle::class, $kernelBundles);
         $goatQueryBundleDetected = \in_array(GoatQueryBundle::class, $kernelBundles);
         $messageBrokerBundleDetected = \in_array(MessageBrokerBundle::class, $kernelBundles);
@@ -39,6 +41,10 @@ final class CoreBusExtension extends Extension
         $loader = new YamlFileLoader($container, new FileLocator(\dirname(__DIR__).'/Resources/config'));
         $loader->load('corebus.core.yaml');
         $loader->load('corebus.console.yaml');
+
+        if ($accessControlDetected) {
+            $loader->load('corebus.access_control.yaml');
+        }
 
         switch ($config['command_bus']['adapter'] ?? 'auto') {
 

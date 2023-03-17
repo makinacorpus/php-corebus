@@ -5,10 +5,13 @@ declare(strict_types=1);
 namespace MakinaCorpus\CoreBus\Tests\Bridge\Symfony\DependencyInjection;
 
 use Goat\Query\Symfony\GoatQueryBundle;
+use MakinaCorpus\AccessControl\Authorization;
+use MakinaCorpus\AccessControl\Bridge\Symfony\AccessControlBundle;
 use MakinaCorpus\CoreBus\Bridge\EventStore\EventStoreEventBusDecorator;
 use MakinaCorpus\CoreBus\Bridge\Symfony\Command\CommandPushCommand;
 use MakinaCorpus\CoreBus\Bridge\Symfony\Command\CommandWorkerCommand;
 use MakinaCorpus\CoreBus\Bridge\Symfony\DependencyInjection\CoreBusExtension;
+use MakinaCorpus\CoreBus\CommandBus\CommandAuthorizationChecker;
 use MakinaCorpus\CoreBus\CommandBus\CommandBus;
 use MakinaCorpus\CoreBus\CommandBus\CommandConsumer;
 use MakinaCorpus\CoreBus\CommandBus\SynchronousCommandBus;
@@ -52,6 +55,13 @@ final class KernelConfigurationTest extends TestCase
         $container->setDefinition('serializer', $serializerDefinition);
         $container->setAlias(SymfonySerializer::class, 'serializer');
          */
+
+        if (\in_array(AccessControlBundle::class, $bundles)) {
+            $accessControlDefinition = new Definition();
+            $accessControlDefinition->setClass(Authorization::class);
+            $accessControlDefinition->setSynthetic(true);
+            $container->setDefinition(Authorization::class, $accessControlDefinition);
+        }
 
         if (\in_array(EventStoreBundle::class, $bundles)) {
             $eventStoreDefinition = new Definition();
@@ -100,6 +110,11 @@ final class KernelConfigurationTest extends TestCase
         $extension->load([$config], $container = $this->getContainer());
 
         // Ensure dispatcher configuration.
+        self::assertTrue($container->hasAlias(CommandAuthorizationChecker::class));
+        self::assertTrue($container->hasDefinition('corebus.command.authorization_checker'));
+        self::assertTrue($container->hasDefinition('corebus.command.bus.asynchronous.authorization'));
+        self::assertTrue($container->hasDefinition('corebus.command.bus.synchronous.authorization'));
+
         self::assertTrue($container->hasAlias(CommandBus::class));
         self::assertTrue($container->hasAlias('corebus.command.bus.asynchronous'));
 
@@ -125,6 +140,23 @@ final class KernelConfigurationTest extends TestCase
         // Console commands.
         self::assertTrue($container->hasDefinition(CommandPushCommand::class));
         self::assertTrue($container->hasDefinition(CommandWorkerCommand::class));
+
+        $container->compile();
+    }
+
+    /**
+     * Test config with access control.
+     */
+    public function testConfigLoadWithAccessControlEnabled()
+    {
+        $config = $this->getMinimalConfig();
+
+        $extension = new CoreBusExtension();
+        $extension->load([$config], $container = $this->getContainer([], [
+            AccessControlBundle::class,
+        ]));
+
+        self::assertTrue($container->hasDefinition('corebus.command.authorization_checker.access_control'));
 
         $container->compile();
     }

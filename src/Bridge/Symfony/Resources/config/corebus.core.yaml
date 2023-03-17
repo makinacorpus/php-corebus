@@ -71,6 +71,24 @@ services:
         alias: corebus.command.bus.passthrough
 
     #
+    # Authorization checker
+    #
+
+    corebus.command.authorization_checker:
+        class: MakinaCorpus\CoreBus\Implementation\CommandBus\CommandAuthorizationCheckerChain
+        arguments: []
+
+    corebus.command.bus.asynchronous.authorization:
+        class: MakinaCorpus\CoreBus\Implementation\CommandBus\AuthorizationCommandBusDecorator
+        decorates: corebus.command.bus.asynchronous
+        arguments: ['@corebus.command.authorization_checker', '@.inner']
+
+    corebus.command.bus.synchronous.authorization:
+        class: MakinaCorpus\CoreBus\Implementation\CommandBus\AuthorizationCommandBusDecorator
+        decorates: corebus.command.bus.synchronous
+        arguments: ['@corebus.command.authorization_checker', '@.inner']
+
+    #
     # Command consumer and command handler locator.
     #
 
@@ -105,6 +123,9 @@ services:
     #
     # Aliases to use and Symfony autowiring.
     #
+
+    MakinaCorpus\CoreBus\CommandBus\CommandAuthorizationChecker:
+        alias: corebus.command.authorization_checker
 
     MakinaCorpus\CoreBus\EventBus\EventBus:
         alias: corebus.command.consumer.transactional

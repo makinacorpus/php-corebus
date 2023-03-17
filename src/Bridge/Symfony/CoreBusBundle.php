@@ -6,6 +6,7 @@ namespace MakinaCorpus\CoreBus\Bridge\Symfony;
 
 use MakinaCorpus\CoreBus\Attr\CommandHandler as CommandHandlerAttribute;
 use MakinaCorpus\CoreBus\Attr\EventListener as EventListenerAttribute;
+use MakinaCorpus\CoreBus\Bridge\Symfony\DependencyInjection\Compiler\RegisterCommandAuthorizationCheckerPass;
 use MakinaCorpus\CoreBus\Bridge\Symfony\DependencyInjection\Compiler\RegisterCommandHandlerPass;
 use MakinaCorpus\CoreBus\Bridge\Symfony\DependencyInjection\Compiler\RegisterEventInfoExtractorPass;
 use MakinaCorpus\CoreBus\Bridge\Symfony\DependencyInjection\Compiler\RegisterEventListenerPass;
@@ -70,6 +71,7 @@ final class CoreBusBundle extends Bundle
             }
         );
 
+        $container->addCompilerPass(new RegisterCommandAuthorizationCheckerPass());
         $container->addCompilerPass(new RegisterCommandHandlerPass());
         $container->addCompilerPass(new RegisterEventListenerPass());
         $container->addCompilerPass(new RegisterEventInfoExtractorPass());

@@ -18,6 +18,7 @@
     },
     "require-dev": {
         "friendsofphp/php-cs-fixer": "^2.16",
+        "makinacorpus/access-control": "^1.0",
         "makinacorpus/event-store": "^1.0.4",
         "makinacorpus/goat-query-bundle": "^3.1",
         "makinacorpus/message": "^1.0.4",

@@ -410,6 +410,53 @@ For all those attributes, parameters are optional, but you might set the
 `target` parameter to disambiguate which class the handler or listener catches.
 Using this, you can use interfaces for matching instead of concrete classes.
 
+# Access control on command input
+
+This API allows you to provide access control on command input. Warning, on
+input only, once a command is withing the bus, you can't access control it
+anymore.
+
+You can do custom access control by implementing the
+`MakinaCorpus\CoreBus\CommandBus\CommandAuthorizationChecker` interface:
+
+```php
+namespace App\Domain\SomeBusiness\AccessControl;
+
+use MakinaCorpus\CoreBus\CommandBus\CommandAuthorizationChecker;
+
+class MyCommandAuthorizationChecker implements CommandAuthorizationChecker
+{
+    /**
+     * {@inheritdoc}
+     */
+    public function isGranted(object $command): bool
+    {
+         if ($command instanceof SomeForbiddenCommand) {
+             return false;
+         }
+         return true;
+    }
+}
+```
+
+For Symfony bundle user, you need to set the `corebus.authorization_checker`
+tag on your registered authorization checker services.
+
+Moreover, if you use `makinacorpus/access-control` Symfony bundle along this
+API own bundle, it will be autoconfigured:
+
+```yaml
+services:
+    App\Domain\SomeBusiness\AccessControl\MyCommandAuthorizationChecker:
+        tags: ['corebus.authorization_checker']
+```
+
+Access checks are done when executing the `CommandBus::dispatch()` method using
+the decorator pattern. This may prevent you from running arbitrary commands into
+the bus so we will provide a fallback in the future in order to be able to use
+an unprotected bus (for CLI commands, for example). For the time being, you need
+to implement the authorization checker wisely to avoid unexpected behavior.
+
 # Overriding implementations
 
 Any interface in this package is a service in the dependency injection container
