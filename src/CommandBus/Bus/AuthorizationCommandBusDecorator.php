@@ -14,7 +14,7 @@ use MakinaCorpus\CoreBus\Error\UnauthorizedCommandError;
  * Decorator implements SynchronousCommandBus so that it can be used for both
  * synchronous and asynchronous commands buses.
  */
-final class AuthorizationCommandBusDecorator implements SynchronousCommandBus
+final class AuthorizationCommandBusDecorator extends AbstractCommandBus implements SynchronousCommandBus
 {
     private CommandAuthorizationChecker $authorizationChecker;
     private CommandBus $decorated;
@@ -28,12 +28,12 @@ final class AuthorizationCommandBusDecorator implements SynchronousCommandBus
     /**
      * {@inheritdoc}
      */
-    public function dispatchCommand(object $command): CommandResponsePromise
+    public function dispatchCommand(object $command, ?array $properties = null): CommandResponsePromise
     {
         if (!$this->authorizationChecker->isGranted($command)) {
             throw new UnauthorizedCommandError();
         }
 
-        return $this->decorated->dispatchCommand($command);
+        return $this->decorated->dispatchCommand($command, $properties);
     }
 }

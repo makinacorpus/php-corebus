@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace MakinaCorpus\CoreBus\Attribute;
+namespace MakinaCorpus\CoreBus\Attr\Loader;
 
 /**
  * Set of loaded attribute.

@@ -16,5 +16,10 @@ interface CommandBus
      * can be delayed or sent asynchronously, case in which Reponse will not
      * be returned.
      */
-    public function dispatchCommand(object $command): CommandResponsePromise;
+    public function dispatchCommand(object $command, ?array $properties = null): CommandResponsePromise;
+
+    /**
+     * Create message builder.
+     */
+    public function create(object $command): MessageBuilder;
 }

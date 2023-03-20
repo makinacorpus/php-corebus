@@ -6,7 +6,7 @@ namespace MakinaCorpus\CoreBus\Bridge\EventStore;
 
 use MakinaCorpus\CoreBus\Attr\CommandAsEvent;
 use MakinaCorpus\CoreBus\Attr\NoStore;
-use MakinaCorpus\CoreBus\Attribute\AttributeLoader;
+use MakinaCorpus\CoreBus\Attr\Loader\AttributeLoader;
 use MakinaCorpus\CoreBus\EventBus\EventBus;
 use MakinaCorpus\EventStore\EventStore;
 use MakinaCorpus\EventStore\Projector\Runtime\RuntimePlayer;

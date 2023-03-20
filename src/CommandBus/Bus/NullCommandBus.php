@@ -11,7 +11,7 @@ use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\NullLogger;
 
-final class NullCommandBus implements SynchronousCommandBus, LoggerAwareInterface
+final class NullCommandBus extends AbstractCommandBus implements SynchronousCommandBus, LoggerAwareInterface
 {
     use LoggerAwareTrait;
 
@@ -23,10 +23,10 @@ final class NullCommandBus implements SynchronousCommandBus, LoggerAwareInterfac
     /**
      * {@inheritdoc}
      */
-    public function dispatchCommand(object $command): CommandResponsePromise
+    public function dispatchCommand(object $command, ?array $properties = null): CommandResponsePromise
     {
         $this->logger->debug("NullCommandBus: Received command for dispatch: {command}, dropping", ['command' => $command]);
 
-        return new NeverCommandResponsePromise();
+        return new NeverCommandResponsePromise($properties);
     }
 }

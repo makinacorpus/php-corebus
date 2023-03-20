@@ -6,6 +6,7 @@ namespace MakinaCorpus\CoreBus\CommandBus;
 
 use MakinaCorpus\CoreBus\CommandBus\Error\CommandResponseError;
 use MakinaCorpus\CoreBus\CommandBus\Error\CommandResponseNotReadyError;
+use MakinaCorpus\Message\PropertyBag;
 
 /**
  * This should be promise, PHP doesn't have them, we have a custom
@@ -27,7 +28,7 @@ interface CommandResponsePromise
     /**
      * Get sent message properties.
      */
-    public function getProperties(): Properties;
+    public function getProperties(): PropertyBag;
 
     /**
      * Is response ready.

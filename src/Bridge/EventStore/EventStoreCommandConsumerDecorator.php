@@ -5,7 +5,7 @@ declare (strict_types=1);
 namespace MakinaCorpus\CoreBus\Bridge\EventStore;
 
 use MakinaCorpus\CoreBus\Attr\NoStore;
-use MakinaCorpus\CoreBus\Attribute\AttributeLoader;
+use MakinaCorpus\CoreBus\Attr\Loader\AttributeLoader;
 use MakinaCorpus\CoreBus\CommandBus\CommandConsumer;
 use MakinaCorpus\CoreBus\CommandBus\CommandResponsePromise;
 use MakinaCorpus\EventStore\EventStore;

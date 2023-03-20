@@ -11,7 +11,7 @@ use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\NullLogger;
 
-final class PassthroughCommandBus implements SynchronousCommandBus, LoggerAwareInterface
+final class PassthroughCommandBus extends AbstractCommandBus implements SynchronousCommandBus, LoggerAwareInterface
 {
     use LoggerAwareTrait;
 
@@ -26,7 +26,7 @@ final class PassthroughCommandBus implements SynchronousCommandBus, LoggerAwareI
     /**
      * {@inheritdoc}
      */
-    public function dispatchCommand(object $command): CommandResponsePromise
+    public function dispatchCommand(object $command, ?array $properties = null): CommandResponsePromise
     {
         $this->logger->debug("PassthroughCommandBus: Passing command to consumer: {command}, dropping", ['command' => $command]);
 

@@ -116,17 +116,13 @@ final class KernelConfigurationTest extends TestCase
         self::assertTrue($container->hasDefinition('corebus.command.bus.synchronous.authorization'));
 
         self::assertTrue($container->hasAlias(CommandBus::class));
-        // @todo self::assertTrue($container->hasAlias('corebus.command.bus.asynchronous'));
-        self::assertTrue($container->hasAlias('corebus.command.publisher.asynchronous'));
-        self::assertTrue($container->hasAlias('corebus.command.publisher.synchronous'));
-
+        self::assertTrue($container->hasDefinition('corebus.command.bus.asynchronous'));
         self::assertTrue($container->hasAlias(CommandConsumer::class));
         self::assertTrue($container->hasAlias('corebus.command.consumer'));
         self::assertTrue($container->hasDefinition('corebus.command.consumer.transactional'));
 
         self::assertTrue($container->hasAlias(SynchronousCommandBus::class));
-        // @todo self::assertTrue($container->hasAlias('corebus.command.bus.synchronous'));
-        self::assertTrue($container->hasDefinition('corebus.command.publisher.passthrough'));
+        self::assertTrue($container->hasDefinition('corebus.command.bus.synchronous'));
 
         self::assertTrue($container->hasAlias(CommandConsumer::class));
         self::assertTrue($container->hasDefinition('corebus.command.consumer.default'));

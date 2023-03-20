@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace MakinaCorpus\CoreBus\Tests\Attribute\Loader;
 
 use MakinaCorpus\CoreBus\Attr\Async;
-use MakinaCorpus\CoreBus\Attribute\Attribute;
-use MakinaCorpus\CoreBus\Attribute\AttributeLoader;
-use MakinaCorpus\CoreBus\Attribute\Error\AttributeError;
+use MakinaCorpus\CoreBus\Attr\Loader\Attribute;
+use MakinaCorpus\CoreBus\Attr\Loader\AttributeError;
+use MakinaCorpus\CoreBus\Attr\Loader\AttributeLoader;
 use PHPUnit\Framework\TestCase;
 
 class AttributeLoaderTest extends TestCase

@@ -6,7 +6,7 @@ namespace MakinaCorpus\CoreBus\CommandBus\Consumer;
 
 use MakinaCorpus\CoreBus\Attr\CommandAsEvent;
 use MakinaCorpus\CoreBus\Attr\NoTransaction;
-use MakinaCorpus\CoreBus\Attribute\AttributeLoader;
+use MakinaCorpus\CoreBus\Attr\Loader\AttributeLoader;
 use MakinaCorpus\CoreBus\CommandBus\CommandConsumer;
 use MakinaCorpus\CoreBus\CommandBus\CommandResponsePromise;
 use MakinaCorpus\CoreBus\CommandBus\Transaction\MultiCommand;

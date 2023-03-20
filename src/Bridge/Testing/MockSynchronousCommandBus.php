@@ -6,8 +6,9 @@ namespace MakinaCorpus\CoreBus\Bridge\Testing;
 
 use MakinaCorpus\CoreBus\CommandBus\CommandResponsePromise;
 use MakinaCorpus\CoreBus\CommandBus\SynchronousCommandBus;
+use MakinaCorpus\CoreBus\CommandBus\Bus\AbstractCommandBus;
 
-class MockSynchronousCommandBus implements SynchronousCommandBus
+class MockSynchronousCommandBus extends AbstractCommandBus implements SynchronousCommandBus
 {
     /** @var mixed[] */
     private $dispatched = [];
@@ -52,7 +53,7 @@ class MockSynchronousCommandBus implements SynchronousCommandBus
     /**
      * {@inheritdoc}
      */
-    public function dispatchCommand(object $command): CommandResponsePromise
+    public function dispatchCommand(object $command, ?array $properties = null): CommandResponsePromise
     {
         $this->dispatched[] = $command;
 
@@ -60,7 +61,7 @@ class MockSynchronousCommandBus implements SynchronousCommandBus
 
         try {
             try {
-                return $this->decorated->dispatchCommand($command);
+                return $this->decorated->dispatchCommand($command, $properties);
             } catch (\Throwable $e) {
                 $exception = $e;
             }

@@ -6,32 +6,27 @@ namespace MakinaCorpus\CoreBus\CommandBus\Testing;
 
 use MakinaCorpus\CoreBus\CommandBus\CommandBus;
 use MakinaCorpus\CoreBus\CommandBus\CommandResponsePromise;
+use MakinaCorpus\CoreBus\CommandBus\Bus\AbstractCommandBus;
 use MakinaCorpus\CoreBus\CommandBus\Response\NeverCommandResponsePromise;
-use Psr\Log\NullLogger;
 
 /**
  * This class allows to replace your command bus during unit tests.
  *
  * @codeCoverageIgnore
  */
-class TestingCommandBus implements CommandBus
+class TestingCommandBus extends AbstractCommandBus implements CommandBus
 {
     /** @var object[] */
     private array $commands = [];
 
-    public function __construct()
-    {
-        $this->logger = new NullLogger();
-    }
-
     /**
      * {@inheritdoc}
      */
-    public function dispatchCommand(object $command): CommandResponsePromise
+    public function dispatchCommand(object $command, ?array $properties = null): CommandResponsePromise
     {
         $this->commands[] = $command;
 
-        return new NeverCommandResponsePromise();
+        return new NeverCommandResponsePromise($properties);
     }
 
     public function reset(): void

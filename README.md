@@ -79,6 +79,50 @@ dispatcher. Two options are possible:
    after commit, there is no consistency issues anymore, but if event storage
    procedure fails, you will loose history.
 
+## Internal workflow of commands
+
+### Command dispatcher
+
+Command dispatcher is the user facing command bus for users. It has two
+existing variations:
+
+ - `MakinaCorpus\CoreBus\CommandBus\CommandBus` which is the default command
+   bus interface.
+
+ - `MakinaCorpus\CoreBus\CommandBus\SynchronousCommandbus`, which extends the
+   former. It is the exact same interface, but exists for dependency injection
+   purpose: using the synchronous command bus will always passthrough the
+   command directly from the dispatcher to the consumer, which will make
+   messages being consumed synchronously.
+
+All implementations implement both interfaces, the dependency injection
+component has the reponsability to distinguish the synchronous from the
+asynchronous implementation.
+
+It is also the place where command access control will happen throught a
+decorator, as documented later in this document.
+
+### Command consumer
+
+Command consumer is the local implementation that from a given command will
+execute it. You can find multiple implementations:
+
+ - `MakinaCorpus\CoreBus\CommandBus\Consumer\DefaultCommandConsumer` is the
+   real implementation, that does the handler function lookup and execute it.
+
+ - `MakinaCorpus\CoreBus\CommandBus\Consumer\TransactionalCommandConsumer` is
+   an implementation that will decorate the default consumer, and wrap handler
+   execution into a single database transaction, raising domain events along
+   the way, and rollback in case of any error.
+
+ - `MakinaCorpus\CoreBus\CommandBus\Consumer\NullCommandConsumer` is only in
+   use in unit tests, please ignore that implementation. It may come useful to
+   to you if for any reason you need a dummy implementation.
+
+For now there is a step which hasn't made generic yet, the command bus worker
+which get messages from the queue and send those to the message consumer: it
+is hard wired to the `makinacorpus/message-broker` package.
+
 ## Implementations
 
 Two implementations are provided:

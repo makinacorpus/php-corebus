@@ -2,9 +2,7 @@
 
 declare(strict_types=1);
 
-namespace MakinaCorpus\CoreBus\Attribute;
-
-use MakinaCorpus\CoreBus\Attribute\Error\AttributeError;
+namespace MakinaCorpus\CoreBus\Attr\Loader;
 
 final class AttributeLoader
 {

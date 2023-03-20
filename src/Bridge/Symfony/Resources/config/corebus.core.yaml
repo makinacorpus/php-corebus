@@ -23,7 +23,7 @@ services:
         alias: corebus.transaction.manager.null
 
     corebus.event_buffer.manager.array:
-        class: MakinaCorpus\CoreBus\EventBus\EventBuffer\ArrayEventBufferManager
+        class: MakinaCorpus\CoreBus\EventBus\Buffer\ArrayEventBufferManager
 
     corebus.event_buffer.manager:
         alias: corebus.event_buffer.manager.array
@@ -70,23 +70,6 @@ services:
             - "@corebus.command.consumer"
         tags:
             - { name: "monolog.logger", channel: "corebus" }
-
-    #
-    # Command publishers.
-    #
-
-    corebus.command.publisher.passthrough:
-        class: MakinaCorpus\CoreBus\CommandBus\Bus\PassthroughCommandBus
-        arguments:
-            - "@corebus.command.consumer"
-        tags:
-            - { name: "monolog.logger", channel: "corebus" }
-
-    corebus.command.publisher.asynchronous:
-        alias: corebus.command.publisher.passthrough
-
-    corebus.command.publisher.synchronous:
-        alias: corebus.command.publisher.passthrough
 
     #
     # Authorization checker

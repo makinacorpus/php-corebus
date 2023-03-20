@@ -10,6 +10,7 @@ use MakinaCorpus\CoreBus\Bridge\Testing\MockSynchronousCommandBus;
 use MakinaCorpus\CoreBus\CommandBus\CommandBus;
 use MakinaCorpus\CoreBus\CommandBus\CommandResponsePromise;
 use MakinaCorpus\CoreBus\CommandBus\SynchronousCommandBus;
+use MakinaCorpus\CoreBus\CommandBus\Bus\AbstractCommandBus;
 use MakinaCorpus\CoreBus\CommandBus\Response\NeverCommandResponsePromise;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 
@@ -75,14 +76,14 @@ abstract class AbstractWithCommandBusTest extends KernelTestCase
      */
     protected static function createNullCommandBus(): CommandBus
     {
-        return new class() implements CommandBus
+        return new class() extends AbstractCommandBus implements CommandBus
         {
             /**
              * {@inheritdoc}
              */
-            public function dispatchCommand(object $command): CommandResponsePromise
+            public function dispatchCommand(object $command, ?array $properties = null): CommandResponsePromise
             {
-                return new NeverCommandResponsePromise();
+                return new NeverCommandResponsePromise($properties);
             }
         };
     }

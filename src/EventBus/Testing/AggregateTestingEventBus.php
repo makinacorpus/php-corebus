@@ -6,7 +6,7 @@ namespace MakinaCorpus\CoreBus\EventBus\Testing;
 
 use MakinaCorpus\CoreBus\Attr\Aggregate;
 use MakinaCorpus\CoreBus\Attr\NoAggregate;
-use MakinaCorpus\CoreBus\Attribute\AttributeLoader;
+use MakinaCorpus\CoreBus\Attr\Loader\AttributeLoader;
 use PHPUnit\Framework\ExpectationFailedException;
 
 /**
