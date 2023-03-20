@@ -64,10 +64,12 @@ services:
         tags:
             - { name: "monolog.logger", channel: "corebus" }
 
+    # Default asynchronous command bus cannot have the consumer as dependency
+    # as it would create circular dependencies, that actually highlights deeper
+    # concerns: the consumer needs the command bus for sending responses, the
+    # bus cannot therefore need the consumer for passing messages throught.
     corebus.command.bus.asynchronous:
-        class: MakinaCorpus\CoreBus\CommandBus\Bus\PassthroughCommandBus
-        arguments:
-            - "@corebus.command.consumer"
+        class: MakinaCorpus\CoreBus\CommandBus\Bus\NullCommandConsumer
         tags:
             - { name: "monolog.logger", channel: "corebus" }
 
@@ -109,8 +111,10 @@ services:
 
     corebus.command.consumer.transactional:
         class: MakinaCorpus\CoreBus\CommandBus\Consumer\TransactionalCommandConsumer
+        decorates: corebus.command.consumer.default
+        decoration_priority: 100
         arguments:
-            - "@corebus.command.consumer.default"
+            - "@.inner"
             - "@corebus.event.bus.internal"
             - "@corebus.event.bus.external"
             - "@corebus.event_buffer.manager"
@@ -118,8 +122,16 @@ services:
         tags:
             - { name: "monolog.logger", channel: "corebus" }
 
+    corebus.command.consumer.reply_to:
+        class: MakinaCorpus\CoreBus\CommandBus\Consumer\ReplyToCommandConsumer
+        decorates: corebus.command.consumer.default
+        decoration_priority: 50
+        arguments:
+            - "@.inner"
+            - "@corebus.command.bus.asynchronous"
+
     corebus.command.consumer:
-        alias: corebus.command.consumer.transactional
+        alias: corebus.command.consumer.default
 
     #
     # Aliases to use and Symfony autowiring.

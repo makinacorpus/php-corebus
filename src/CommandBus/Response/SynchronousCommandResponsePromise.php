@@ -18,6 +18,8 @@ final class SynchronousCommandResponsePromise extends AbstractCommandResponsePro
 
     private function __construct($response, $error, bool $isError = false, ?array $properties = null)
     {
+        parent::__construct($properties);
+
         $this->response = $response;
         $this->error = $error;
         $this->isError = $isError;
