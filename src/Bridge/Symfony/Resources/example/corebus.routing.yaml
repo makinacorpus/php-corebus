@@ -1,0 +1,14 @@
+corebus_command_dispatch:
+    path: /api/command/dispatch
+    methods: POST|PUT
+    controller: MakinaCorpus\CoreBus\Bridge\Symfony\Controller\CommandController::dispatch
+
+corebus_command_dispatch_transaction:
+    path: /api/command/dispatch/transaction
+    methods: POST|PUT
+    controller: MakinaCorpus\CoreBus\Bridge\Symfony\Controller\CommandController::dispatchTransaction
+
+corebus_command_consume:
+    path: /api/command/consume
+    methods: POST|PUT
+    controller: MakinaCorpus\CoreBus\Bridge\Symfony\Controller\CommandController::consume

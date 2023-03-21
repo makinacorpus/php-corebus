@@ -501,6 +501,181 @@ the bus so we will provide a fallback in the future in order to be able to use
 an unprotected bus (for CLI commands, for example). For the time being, you need
 to implement the authorization checker wisely to avoid unexpected behavior.
 
+# Exposing command bus HTTP endpoints
+
+## Provided controller
+
+A working basic controller implementation is provided as the
+`MakinaCorpus\CoreBus\Bridge\Symfony\Controller\CommandController` class and
+provides three methods.
+
+Since exposing your bus directly as an HTTP endpoint poses important security
+concerns, it's up to you to configure and secure it. This is why this controller
+is not auto-configured.
+
+Remember that all commands will pass throught the `CommandAuthorizationChecker`
+in default configuration, you may configure access right using it.
+
+## Configuring the controller in Symfony
+
+A sample `src/Bridge/Symfony/Resources/example/corebus.routing.yaml` file is
+provided but will not be configured per default: you must copy/paste it or its
+contents into your project to make it work.
+
+## Dispatching a command
+
+Simply make a `POST` or `PUT` HTTP request on the `/api/command/dispatch`
+endpoint path (that you may have changed):
+
+```sh
+curl -X POST \
+    -H "Content-Type: application/json" \
+    -d '{"some": "content"}' \
+    'http://localhost/api/command/dispatch?command=SomeCommandName&async=1'
+```
+
+You should expect the following result:
+
+```json
+{
+    "status": "queued",
+    "queue": "some_queue_name",
+    "reply_to": null
+}
+```
+
+Please note that if you pass the `&async=1` GET parameter, command will be
+queued into the bus, and `"status": "queued"` will be present in the response.
+
+If you don't specify the parameter, command will be consumed synchronously
+`"status": "ok"` will be returning instead, if message succeded.
+
+The `reply_to` parameter can be expressed as a GET parameter as well, if set
+to any value, a reply to queue name will be generated on the server side
+and returned in the `"reply_to"` JSON property.
+
+This allows you to use the `consume` endpoint using this queue name in order
+to fetch a potential reply.
+
+## Dispatching a command transaction
+
+This is undocumented yet.
+
+## Consumming messages from a given queue
+
+The consume endpoint was created mostly for implementing the RPC method call
+via the command bus pattern, hence the following restriction: you can only
+listen to queues you implicitely created by setting the `reply_to` parameter
+when calling the HTTP dispatch endpoint.
+
+When sending a `reply_to` parameter, a name will be generated on the server
+side, stored into session, and returned by the dispatch command under the
+`reply_to` attribute.
+
+## Examples
+
+### Synchronous dispatch example
+
+```sh
+curl -X POST -k -H "Content-Type: application/json" -d '{}' 'https://localhost/api/command/dispatch?command=App\Command\Ping&reply-to=1 | json_pp
+```
+
+This would give you the following result:
+
+```json
+{
+   "properties" : [],
+   "response" : {
+      "date" : "2023-03-21 11:38:15.321013"
+   },
+   "status" : "ok"
+}
+```
+
+Please note the lack of properties, since the message went throught a direct
+dispatch, there is no bus metadata attached to the message.
+
+Request body `response` property contains the handler response.
+
+### Asychronous dispatch example
+
+For example, considering that the `App\Command\Ping` command simply return
+a `App\Command\PingResponse` object with a few properties, let's dispatch it
+into the bus:
+
+```sh
+curl -X POST -k -H "Content-Type: application/json" -d '{}' 'https://localhost/api/command/dispatch?command=App\Command\Ping&async=1&reply-to=1 | json_pp
+```
+
+This would give you the following result:
+
+```json
+{
+   "properties" : {
+      "content-type" : "application/json",
+      "message-id" : "989bc4db-578b-4aee-a060-bfa26a44487a",
+      "reply-to" : "corebus.reply-to.c88d2f9f-37f4-46f3-8b08-52f9c5a79eb9",
+      "type" : "App\Command\Ping"
+   },
+   "status" : "queued"
+}
+```
+
+### Queue response consumption
+
+Let's consider the previous example, notice that you will find the `reply-to`
+property into the `properties` property of the response: this is the
+automatically computed queue name for receiving the handler asynchronous
+reponse.
+
+Let's consume the queue:
+
+```sh
+curl -X POST -k -H "Content-Type: application/json" 'https://localhost/api/command/consume?queue=corebus.reply-to.c88d2f9f-37f4-46f3-8b08-52f9c5a79eb9' | json_pp
+```
+
+If the command was not processed, you would get the following result:
+
+```json
+{
+   "status" : "empty"
+}
+```
+
+As soon as the response is received and awaits into the queue:
+
+```json
+{
+   "properties" : {
+      "content-type" : "application/json",
+      "message-id" : "821a6146-0816-4387-9404-48ec640b0a67",
+      "type" : "SP2.System.Command.PingResponse",
+      "x-retry-count" : "0",
+      "x-routing-key" : "corebus.reply-to.c88d2f9f-37f4-46f3-8b08-52f9c5a79eb9",
+      "x-serial" : "138343"
+   },
+   "response" : {
+      "date" : "2023-03-21 11:44:09.000000"
+   },
+   "status" : "ok"
+}
+```
+
+Response is similar to synchronous dispatch, except that you will receive the
+additional properties metadata as well.
+
+This feature is still experimental, there is no security attached to it yet.
+
+## Securing the consume endpoint
+
+Per default, the consume endpoint won't allow any arbitrary queue name, since
+it was created in order to fullfil the need of implemeting RPC via the command
+bus, it will only allow a certain naming pattern.
+
+## Calling RPC methods via bus using HTTP
+
+@todo
+
 # Overriding implementations
 
 Any interface in this package is a service in the dependency injection container

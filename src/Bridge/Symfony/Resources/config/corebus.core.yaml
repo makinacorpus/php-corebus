@@ -151,3 +151,10 @@ services:
 
     MakinaCorpus\CoreBus\CommandBus\SynchronousCommandBus:
         alias: corebus.command.bus.synchronous
+
+    #
+    # HTTP default controller, unused if routes are not registered.
+    #
+
+    MakinaCorpus\CoreBus\Bridge\Symfony\Controller\CommandController:
+        tags: ['controller.service_arguments']
