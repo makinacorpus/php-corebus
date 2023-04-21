@@ -17,35 +17,43 @@ final class ClassParserTest extends TestCase
 
         $result = $classParser->lookup(MockHandler::class);
         $result = \iterator_to_array($result);
-        self::assertCount(4, $result);
+        self::assertCount(5, $result);
         self::assertCallableListContains('eligibleMultipleUserTypeMethod', $result, 3);
-        self::assertCallableListContains('eligibleUnspecifiedParameterMethod', $result);
+        self::assertCallableListContains('eligibleWithServiceArgumentInjection', $result);
+        self::assertCallableListContains('eligibleWithNamedParameter', $result);
 
         $result = $classParser->lookup(MockHandlerWithAttribute::class);
         $result = \iterator_to_array($result);
-        self::assertCount(3, $result);
-        self::assertCallableListContains('eligibleUnspecifiedParameterMethod', $result);
+        self::assertCount(2, $result);
         self::assertCallableListContains('eligibleClassParameterMethod', $result);
         self::assertCallableListContains('eligibleInterfaceParameterMethod', $result);
     }
 
-    public function testErrorInvalidUserType(): void
+    public function testErrorAmbigousMultipleDeclaration(): void
     {
         $classParser = new ClassParser();
 
         self::expectException(ConfigurationError::class);
-        self::expectExceptionMessageMatches('/user type .* is not a class or an interface/');
-        $result = $classParser->lookup(MockHandlerErrorInvalidUserType::class);
+        self::expectExceptionMessage(
+            <<<MSG
+            Method 'error()' has more than one parameter, target type is not specified, cannot guess which one to use, you must specify at least the target parameter type or name.
+            MSG
+        );
+        $result = $classParser->lookup(MockHandlerErrorAmbigousMultipleDeclaration::class);
         $result = \iterator_to_array($result);
     }
 
-    public function testErrorMoreThanOneParameter(): void
+    public function testErrorAmbigousTypeDeclaration(): void
     {
         $classParser = new ClassParser();
 
         self::expectException(ConfigurationError::class);
-        self::expectExceptionMessageMatches('/has more than one parameter/');
-        $result = $classParser->lookup(MockHandlerErrorMoreThanOneParameter::class);
+        self::expectExceptionMessage(
+            <<<MSG
+            Method 'error()' has more than one parameter matching the given target type 'DateTimeInterface' ('\$date1' and '\$date2').
+            MSG
+        );
+        $result = $classParser->lookup(MockHandlerErrorAmbigousTypeDeclaration::class);
         $result = \iterator_to_array($result);
     }
 
@@ -54,7 +62,11 @@ final class ClassParserTest extends TestCase
         $classParser = new ClassParser();
 
         self::expectException(ConfigurationError::class);
-        self::expectExceptionMessageMatches('/first parameter has no type/');
+        self::expectExceptionMessage(
+            <<<MSG
+            Method 'error()' has no class or interface typed parameters, you must specify a target type on the target parameter.
+            MSG
+        );
         $result = $classParser->lookup(MockHandlerErrorNoType::class);
         $result = \iterator_to_array($result);
     }
@@ -64,8 +76,40 @@ final class ClassParserTest extends TestCase
         $classParser = new ClassParser();
 
         self::expectException(ConfigurationError::class);
-        self::expectExceptionMessageMatches('/target type .* is defined more than once/');
+        self::expectExceptionMessage(
+            <<<MSG
+            Method 'error()' target type 'DateTime' is defined more than once.
+            MSG
+        );
         $result = $classParser->lookup(MockHandlerErrorTargetTwice::class);
+        $result = \iterator_to_array($result);
+    }
+
+    public function testErrorUnsupportedUnionType(): void
+    {
+        $classParser = new ClassParser();
+
+        self::expectException(ConfigurationError::class);
+        self::expectExceptionMessage(
+            <<<MSG
+            Method 'error()' parameter '\$some' has more than one eligible types, using union types are unsupported yet.
+            MSG
+        );
+        $result = $classParser->lookup(MockHandlerErrorUnsupportedUnionType::class);
+        $result = \iterator_to_array($result);
+    }
+
+    public function testErrorUnsupportedUnionTypeNamed(): void
+    {
+        $classParser = new ClassParser();
+
+        self::expectException(ConfigurationError::class);
+        self::expectExceptionMessage(
+            <<<MSG
+            Method 'error()' parameter '\$some' has more than one eligible types, using union types is unsupported yet.
+            MSG
+        );
+        $result = $classParser->lookup(MockHandlerErrorUnsupportedUnionTypeNamed::class);
         $result = \iterator_to_array($result);
     }
 

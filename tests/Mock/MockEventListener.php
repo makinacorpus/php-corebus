@@ -10,13 +10,11 @@ use MakinaCorpus\CoreBus\EventBus\EventListener;
 final class MockEventListener implements EventListener
 {
     /**
-     * Cannot use when more than one parameter.
-     *
-     * @codeCoverageIgnore
+     * OK.
      */
-    public function doNotA(MockEventA $event, int $foo): void
+    public function doNotA(MockEventA $event, ?int $foo = null): void
     {
-        throw new \BadMethodCallException("I shall not be called.");
+        ++$event->count;
     }
 
     /**

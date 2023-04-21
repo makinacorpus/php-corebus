@@ -10,11 +10,11 @@ use MakinaCorpus\CoreBus\CommandBus\CommandHandler;
 final class MockHandler implements CommandHandler
 {
     /**
-     * Cannot use when more than one parameter.
+     * No parameter with type.
      *
      * @codeCoverageIgnore
      */
-    public function doNotA(MockCommandA $command, int $foo): void
+    public function doNotA($command, int $foo): void
     {
         throw new \BadMethodCallException("I shall not be called.");
     }

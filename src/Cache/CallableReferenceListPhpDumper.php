@@ -163,14 +163,18 @@ PHP
                 \assert($reference instanceof CallableReference);
 
                 $escapedCommandClassName = \addslashes($reference->className);
+                $escapedCommandParameterName = \addslashes($reference->parameterName);
                 $escapedMethodName = \addslashes($reference->methodName);
                 $escapedServiceId = \addslashes($reference->serviceId);
+                $escapedRequiresResolve = $reference->requiresResolve ? 'true' : 'false';
 
                 \fwrite($handle, <<<PHP
                     new CallableReference(
                         '{$escapedCommandClassName}',
+                        '{$escapedCommandParameterName}',
                         '{$escapedMethodName}',
-                        '{$escapedServiceId}'
+                        '{$escapedServiceId}',
+                        {$escapedRequiresResolve}
                     ),
 PHP
                 );

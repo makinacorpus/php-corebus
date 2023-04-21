@@ -27,11 +27,6 @@ class MockHandlerWithAttribute extends MockHandlerParent
     {
     }
 
-    #[\MakinaCorpus\CoreBus\Attr\CommandHandler(target: \DateTime::class)]
-    public function eligibleUnspecifiedParameterMethod($object): void
-    {
-    }
-
     public function eligibleClassParameterMethod(\DateTime $object): void
     {
     }

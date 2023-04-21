@@ -31,7 +31,7 @@ final class ContainerEventListenerLocatorTest extends TestCase
         foreach ($iterable as $callback) {
             $callback($eventA);
         }
-        self::assertSame(2, $eventA->count);
+        self::assertSame(3, $eventA->count);
 
         $eventB = new MockEventB();
         $iterable = $locator->find($eventB);
