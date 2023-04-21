@@ -13,6 +13,14 @@ services:
         public: false
 
     #
+    # Integration
+    #
+
+    corebus.argument_resolver:
+        class: MakinaCorpus\ArgumentResolver\DefaultArgumentResolver
+        tags: [{ name: argument_resolver, id: corebus }]
+
+    #
     # Transactions manager
     #
 
@@ -34,7 +42,7 @@ services:
 
     corebus.event.listener.locator.container:
         class: MakinaCorpus\CoreBus\EventBus\Bus\ContainerEventListenerLocator
-        arguments: [[]]
+        arguments: [[], null, '@corebus.argument_resolver']
 
     corebus.event.listener.locator:
         alias: corebus.event.listener.locator.container
@@ -97,7 +105,7 @@ services:
 
     corebus.command.handler.locator.container:
         class: MakinaCorpus\CoreBus\CommandBus\Bus\ContainerCommandHandlerLocator
-        arguments: [[]]
+        arguments: [[], null, '@corebus.argument_resolver']
 
     corebus.command.handler_locator:
         alias: corebus.command.handler.locator.container

@@ -29,7 +29,6 @@ final class ContainerCommandHandlerLocatorTest extends TestCase
             'mock_handler' => MockHandler::class,
         ], $serviceLocator);
 
-
         $commandA = new MockCommandA();
         $callback = $locator->find($commandA);
         self::assertFalse($commandA->done);

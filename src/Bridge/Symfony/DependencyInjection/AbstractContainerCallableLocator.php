@@ -6,11 +6,11 @@ namespace MakinaCorpus\CoreBus\Bridge\Symfony\DependencyInjection;
 
 use MakinaCorpus\ArgumentResolver\ArgumentResolver;
 use MakinaCorpus\ArgumentResolver\DefaultArgumentResolver;
+use MakinaCorpus\ArgumentResolver\Context\ArrayResolverContext;
 use MakinaCorpus\CoreBus\Cache\CallableReference;
 use MakinaCorpus\CoreBus\Cache\CallableReferenceList;
 use MakinaCorpus\CoreBus\Cache\RuntimeCallableReferenceList;
 use Symfony\Component\DependencyInjection\ServiceLocator;
-use MakinaCorpus\ArgumentResolver\Context\ArrayResolverContext;
 
 abstract class AbstractContainerCallableLocator
 {
@@ -36,10 +36,7 @@ abstract class AbstractContainerCallableLocator
         }
     }
 
-    protected function allowMultiple(): bool
-    {
-        return false;
-    }
+    protected abstract function allowMultiple(): bool;
 
     protected function createCallable(CallableReference $reference): callable
     {
