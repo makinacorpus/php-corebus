@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace MakinaCorpus\CoreBus\Bridge\Symfony\Controller;
 
-use IrpAuto\SoliPre\Shared\Serializer\Serializer;
 use MakinaCorpus\CoreBus\CommandBus\CommandBus;
 use MakinaCorpus\CoreBus\CommandBus\SynchronousCommandBus;
 use MakinaCorpus\CoreBus\CommandBus\Transaction\MultiCommand;
 use MakinaCorpus\MessageBroker\MessageConsumerFactory;
 use MakinaCorpus\Normalization\NameMap;
+use MakinaCorpus\Normalization\Serializer;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -60,7 +60,7 @@ final class CommandController
             }
 
             $className = $nameMap->toPhpType($commandData['command'], NameMap::TAG_COMMAND);
-            $commands[] = $serializer->deserialize('application/json', $className, \json_encode($commandData['body'] ?? []));
+            $commands[] = $serializer->unserialize($className, 'application/json', \json_encode($commandData['body'] ?? []));
         }
 
         return $this->dispatchAndRespond(
@@ -104,7 +104,7 @@ final class CommandController
         }
 
         $className = $nameMap->toPhpType($name, NameMap::TAG_COMMAND);
-        $command = $serializer->deserialize($incomingContentType, $className, $requestBody);
+        $command = $serializer->unserialize($className, $incomingContentType, $requestBody);
 
         return $this->dispatchAndRespond(
             $serializer,
