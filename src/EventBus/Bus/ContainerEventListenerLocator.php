@@ -4,32 +4,18 @@ declare(strict_types=1);
 
 namespace MakinaCorpus\CoreBus\EventBus\Bus;
 
+use MakinaCorpus\CoreBus\Bridge\Symfony\DependencyInjection\AbstractContainerCallableLocator;
 use MakinaCorpus\CoreBus\Cache\CallableReference;
-use MakinaCorpus\CoreBus\Cache\CallableReferenceList;
-use MakinaCorpus\CoreBus\Cache\RuntimeCallableReferenceList;
 use MakinaCorpus\CoreBus\EventBus\EventListenerLocator;
-use Symfony\Component\DependencyInjection\ServiceLocator;
 
-final class ContainerEventListenerLocator implements EventListenerLocator
+final class ContainerEventListenerLocator extends AbstractContainerCallableLocator implements EventListenerLocator
 {
-    private ?ServiceLocator $serviceLocator = null;
-    private CallableReferenceList $referenceList;
-
     /**
-     * @param array<string,string>|CallableReferenceList $references
+     * {@inheritdoc}
      */
-    public function __construct($references, ?ServiceLocator $serviceLocator = null)
+    protected function allowMultiple(): bool
     {
-        $this->serviceLocator = $serviceLocator;
-
-        if ($references instanceof CallableReferenceList) {
-            $this->referenceList = $references;
-        } else if (\is_array($references)) {
-            $this->referenceList = new RuntimeCallableReferenceList(true);
-            foreach ($references as $id => $className) {
-                $this->referenceList->appendFromClass($className, $id);
-            }
-        }
+        return true;
     }
 
     /**
@@ -37,10 +23,6 @@ final class ContainerEventListenerLocator implements EventListenerLocator
      */
     public function find(object $event): iterable
     {
-        if (!$this->serviceLocator) {
-            throw new \LogicException("Misinitialized event listener locator.");
-        }
-
         $candidates = [];
         $className = \get_class($event);
 
@@ -58,9 +40,7 @@ final class ContainerEventListenerLocator implements EventListenerLocator
             foreach ($this->referenceList->all($candidate) as $reference) {
                 \assert($reference instanceof CallableReference);
 
-                $service = $this->serviceLocator->get($reference->serviceId);
-
-                yield static fn (object $command) => $service->{$reference->methodName}($command);
+                yield $this->createCallable($reference);
             }
         }
     }

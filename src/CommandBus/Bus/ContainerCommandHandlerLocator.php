@@ -4,32 +4,18 @@ declare(strict_types=1);
 
 namespace MakinaCorpus\CoreBus\CommandBus\Bus;
 
-use MakinaCorpus\CoreBus\Cache\CallableReferenceList;
-use MakinaCorpus\CoreBus\Cache\RuntimeCallableReferenceList;
+use MakinaCorpus\CoreBus\Bridge\Symfony\DependencyInjection\AbstractContainerCallableLocator;
 use MakinaCorpus\CoreBus\CommandBus\CommandHandlerLocator;
 use MakinaCorpus\CoreBus\CommandBus\Error\CommandHandlerNotFoundError;
-use Symfony\Component\DependencyInjection\ServiceLocator;
 
-final class ContainerCommandHandlerLocator implements CommandHandlerLocator
+final class ContainerCommandHandlerLocator extends AbstractContainerCallableLocator implements CommandHandlerLocator
 {
-    private ?ServiceLocator $serviceLocator = null;
-    private CallableReferenceList $referenceList;
-
     /**
-     * @param array<string,string>|CallableReferenceList $references
+     * {@inheritdoc}
      */
-    public function __construct($references, ?ServiceLocator $serviceLocator = null)
+    protected function allowMultiple(): bool
     {
-        $this->serviceLocator = $serviceLocator;
-
-        if ($references instanceof CallableReferenceList) {
-            $this->referenceList = $references;
-        } else if (\is_array($references)) {
-            $this->referenceList = new RuntimeCallableReferenceList(false);
-            foreach ($references as $id => $className) {
-                $this->referenceList->appendFromClass($className, $id);
-            }
-        }
+        return false;
     }
 
     /**
@@ -42,12 +28,7 @@ final class ContainerCommandHandlerLocator implements CommandHandlerLocator
         if (!$reference) {
             throw CommandHandlerNotFoundError::fromCommand($command);
         }
-        if (!$this->serviceLocator) {
-            throw new \LogicException("Misinitialized event listener locator.");
-        }
 
-        $service = $this->serviceLocator->get($reference->serviceId);
-
-        return static fn ($command) => $service->{$reference->methodName}($command);
+        return $this->createCallable($reference);
     }
 }
