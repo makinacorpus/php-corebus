@@ -4,6 +4,10 @@ declare (strict_types=1);
 
 namespace MakinaCorpus\CoreBus\Bridge\EventStore;
 
+/**
+ * @deprecated
+ * @codeCoverageIgnore
+ */
 final class EventInfoExtratorChain implements EventInfoExtrator
 {
     /** @var EventInfoExtrator[] */

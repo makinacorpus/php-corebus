@@ -7,6 +7,10 @@ namespace MakinaCorpus\CoreBus\Bridge\EventStore;
 use MakinaCorpus\CoreBus\Attr\Aggregate;
 use MakinaCorpus\CoreBus\Attr\Loader\AttributeLoader;
 
+/**
+ * @deprecated
+ * @codeCoverageIgnore
+ */
 final class AttributeEventInfoExtrator implements EventInfoExtrator
 {
     private AttributeLoader $attributeLoader;

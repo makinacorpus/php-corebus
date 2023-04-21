@@ -7,6 +7,10 @@ namespace MakinaCorpus\CoreBus\Bridge\EventStore;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
 
+/**
+ * @deprecated
+ * @codeCoverageIgnore
+ */
 final class UuidHelper
 {
     public static function normalize($value): ?UuidInterface

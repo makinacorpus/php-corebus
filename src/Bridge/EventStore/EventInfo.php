@@ -7,6 +7,10 @@ namespace MakinaCorpus\CoreBus\Bridge\EventStore;
 use MakinaCorpus\Message\Property;
 use Ramsey\Uuid\UuidInterface;
 
+/**
+ * @deprecated
+ * @codeCoverageIgnore
+ */
 final class EventInfo
 {
     private ?string $aggregateType = null;

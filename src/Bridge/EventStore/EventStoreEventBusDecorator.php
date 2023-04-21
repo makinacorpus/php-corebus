@@ -29,6 +29,9 @@ use MakinaCorpus\EventStore\Projector\Runtime\RuntimePlayer;
  *
  * Dans une premier temps, on va le brancher sur le bus interne, cf. le fichier
  * config/services/bus.yaml, il va décorer 'corebus.event.bus.internal'.
+ *
+ * @deprecated
+ * @codeCoverageIgnore
  */
 final class EventStoreEventBusDecorator implements EventBus
 {

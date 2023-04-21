@@ -9,6 +9,9 @@ namespace MakinaCorpus\CoreBus\Bridge\EventStore;
  * to keep a clean history, we choose to delegate this to an extra component
  * you can implement outside of your domain, thus avoiding to pollute it with
  * external third-party dependencies.
+ *
+ * @deprecated
+ * @codeCoverageIgnore
  */
 interface EventInfoExtrator
 {

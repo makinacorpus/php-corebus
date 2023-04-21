@@ -8,6 +8,9 @@ use MakinaCorpus\Message\BackwardCompat\AggregateMessage;
 
 /**
  * Supports makinacorpus/goat interface.
+ *
+ * @deprecated
+ * @codeCoverageIgnore
  */
 final class LegacyAggregateEventInfoExtrator implements EventInfoExtrator
 {

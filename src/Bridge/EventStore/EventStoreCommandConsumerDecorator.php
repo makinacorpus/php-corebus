@@ -19,6 +19,9 @@ use MakinaCorpus\Message\Envelope;
  * actually use this event store as a command logging mechanism.
  *
  * This can only work on synchronous command bus.
+ *
+ * @deprecated
+ * @codeCoverageIgnore
  */
 final class EventStoreCommandConsumerDecorator implements CommandConsumer
 {
