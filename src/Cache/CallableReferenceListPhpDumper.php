@@ -53,20 +53,18 @@ class CallableReferenceListPhpDumper
     /**
      * Append items from the given handler class.
      *
-     * @return int
-     *   Count of found handlers.
+     * @return CallableReference[]
      */
-    public function appendFromClass(string $handlerClassName, ?string $handlerServiceId = null): int
+    public function appendFromClass(string $handlerClassName, ?string $handlerServiceId = null): array
     {
         $classParser = new ClassParser($this->target);
 
-        $count = 0;
+        $ret = [];
         foreach ($classParser->lookup($handlerClassName) as $reference) {
-            $this->append($reference);
-            ++$count;
+            $ret[] = $this->append($reference);
         }
 
-        return $count;
+        return $ret;
     }
 
     /**
@@ -205,7 +203,7 @@ PHP
     /**
      * Prepare, validate and append given reference.
      */
-    private function append(CallableReference $reference, ?string $handlerServiceId = null): void
+    private function append(CallableReference $reference, ?string $handlerServiceId = null): CallableReference
     {
         if ($handlerServiceId) {
             $reference->serviceId = $handlerServiceId;
@@ -226,6 +224,6 @@ PHP
             ));
         }
 
-        $this->references[$reference->className][] = $reference;
+        return $this->references[$reference->className][] = $reference;
     }
 }
