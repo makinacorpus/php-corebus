@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace MakinaCorpus\CoreBus\Bridge\Symfony\DependencyInjection\Compiler;
 
+use MakinaCorpus\ArgumentResolver\Bridge\Symfony\DependencyInjection\Compiler\RegisterArgumentResolverPass;
 use MakinaCorpus\CoreBus\Bridge\Symfony\DependencyInjection\DumpedServiceFactory;
+use MakinaCorpus\CoreBus\Cache\CallableReference;
 use MakinaCorpus\CoreBus\Cache\CallableReferenceListPhpDumper;
 use MakinaCorpus\CoreBus\Cache\ClassParser;
 use MakinaCorpus\CoreBus\Cache\NullCallableReferenceList;
@@ -44,9 +46,15 @@ final class RegisterEventListenerPass implements CompilerPassInterface
                 throw new InvalidArgumentException(\sprintf('Class "%s" used for service "%s" cannot be found.', $className, $id));
             }
 
-            if ($dumper->appendFromClass($className, $id)) {
+            if ($references = $dumper->appendFromClass($className, $id)) {
                 $services[$id] = new Reference($id);
                 $services[$className] = new Reference($className);
+
+                // Do not break with previous versions of argument-resolver.
+                if (\class_exists(RegisterArgumentResolverPass::class)) {
+                    $methods = \array_map(fn (CallableReference $reference) => $reference->methodName, $references);
+                    RegisterArgumentResolverPass::registerServiceMethods($container, 'corebus', $id, $methods);
+                }
             }
             $this->prepareClass($className, $definition);
         }
