@@ -69,12 +69,8 @@ final class RegisterEventListenerPass implements CompilerPassInterface
             $container->setDefinition($serviceClassName, $definition);
         }
 
-        $container
-            ->getDefinition('corebus.event.listener.locator.container')
-            ->setArguments([
-                new Reference($serviceClassName),
-                ServiceLocatorTagPass::register($container, $services)
-            ])
-        ;
+        $definition = $container->getDefinition('corebus.event.listener.locator.container');
+        $definition->setArgument(0, new Reference($serviceClassName));
+        $definition->setArgument(1, ServiceLocatorTagPass::register($container, $services));
     }
 }

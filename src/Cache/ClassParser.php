@@ -72,23 +72,17 @@ class ClassParser
                 $instance = $attribute->newInstance();
                 \assert($instance instanceof AbstractHandlerAttribute);
 
-                if ($target = $instance->getTarget()) {
-                    if (\in_array($target, $userTypes)) {
-                        throw new ConfigurationError(\sprintf("Method '%s()' target type '%s' is defined more than once.", $method->name, $target));
-                    }
-                    $userTypes[] = $target;
+                $reference = $this->isMethodEligible($className, $method, $instance->getTarget());
+
+                if (\in_array($reference->className, $userTypes)) {
+                    throw new ConfigurationError(\sprintf("Method '%s()' target type '%s' is defined more than once.", $method->name, $reference->className));
                 }
+                $userTypes[] = $reference->className;
+
+                yield $reference;
             }
 
-            if ($hasAttribute) {
-                if ($userTypes) {
-                    foreach ($userTypes as $userType) {
-                        yield $this->isMethodEligible($className, $method, $userType);
-                    }
-                } else {
-                    yield $this->isMethodEligible($className, $method);
-                }
-            } else if ($parseAllMethods) {
+            if (!$hasAttribute && $parseAllMethods) {
                 try {
                     yield $this->isMethodEligible($className, $method);
                 } catch (ConfigurationError $e) {
@@ -118,11 +112,14 @@ class ClassParser
         switch ($this->target) {
             case self::TARGET_COMMAND_HANDLER:
                 yield from $ref->getAttributes(CommandHandler::class);
+                break;
             case self::TARGET_EVENT_LISTENER:
                 yield from $ref->getAttributes(EventListener::class);
+                break;
             default:
                 yield from $ref->getAttributes(CommandHandler::class);
                 yield from $ref->getAttributes(EventListener::class);
+                break;
         }
     }
 

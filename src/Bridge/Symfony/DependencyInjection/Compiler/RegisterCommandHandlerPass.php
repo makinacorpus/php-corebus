@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace MakinaCorpus\CoreBus\Bridge\Symfony\DependencyInjection\Compiler;
 
+use MakinaCorpus\ArgumentResolver\Bridge\Symfony\DependencyInjection\Compiler\RegisterArgumentResolverPass;
 use MakinaCorpus\CoreBus\Bridge\Symfony\DependencyInjection\DumpedServiceFactory;
 use MakinaCorpus\CoreBus\Cache\CallableReferenceListPhpDumper;
 use MakinaCorpus\CoreBus\Cache\ClassParser;
@@ -49,6 +50,11 @@ final class RegisterCommandHandlerPass implements CompilerPassInterface
                 $services[$className] = new Reference($className);
             }
             $this->prepareClass($className, $definition);
+
+            // Do not break with previous versions of argument-resolver.
+            if (\class_exists(RegisterArgumentResolverPass::class)) {
+                RegisterArgumentResolverPass::registerServiceMethods($container, 'corebus', $id);
+            }
         }
 
         if ($dumper->isEmpty()) {
@@ -69,12 +75,8 @@ final class RegisterCommandHandlerPass implements CompilerPassInterface
             $container->setDefinition($serviceClassName, $definition);
         }
 
-        $container
-            ->getDefinition('corebus.command.handler.locator.container')
-            ->setArguments([
-                new Reference($serviceClassName),
-                ServiceLocatorTagPass::register($container, $services)
-            ])
-        ;
+        $definition = $container->getDefinition('corebus.command.handler.locator.container');
+        $definition->setArgument(0, new Reference($serviceClassName));
+        $definition->setArgument(1, ServiceLocatorTagPass::register($container, $services));
     }
 }
