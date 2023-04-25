@@ -10,6 +10,7 @@ use MakinaCorpus\CoreBus\Bridge\EventStore\EventStoreCommandConsumerDecorator;
 use MakinaCorpus\CoreBus\Bridge\EventStore\EventStoreEventBusDecorator;
 use MakinaCorpus\EventStore\Bridge\Symfony\EventStoreBundle;
 use MakinaCorpus\MessageBroker\Bridge\Symfony\MessageBrokerBundle;
+use Symfony\Bundle\SecurityBundle\SecurityBundle;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Reference;
@@ -35,6 +36,7 @@ final class CoreBusExtension extends Extension
         $accessControlDetected = \in_array(AccessControlBundle::class, $kernelBundles);
         $eventStoreBundleDetected = \in_array(EventStoreBundle::class, $kernelBundles);
         $goatQueryBundleDetected = \in_array(GoatQueryBundle::class, $kernelBundles);
+        $securityDetected = \in_array(SecurityBundle::class, $kernelBundles);
         $messageBrokerBundleDetected = \in_array(MessageBrokerBundle::class, $kernelBundles);
         $messageBrokerEnabled = false;
 
@@ -42,6 +44,9 @@ final class CoreBusExtension extends Extension
         $loader->load('corebus.core.yaml');
         $loader->load('corebus.console.yaml');
 
+        if ($securityDetected) {
+            $loader->load('corebus.security.yaml');
+        }
         if ($accessControlDetected && ($config['access_control']['enabled'] ?? false)) {
             $loader->load('corebus.access_control.yaml');
         }

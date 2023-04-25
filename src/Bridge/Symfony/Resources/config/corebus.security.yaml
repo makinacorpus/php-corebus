@@ -1,0 +1,25 @@
+#
+# Default sample configuration for corebus services.
+#
+# Usually, you probably will not have to make much modification if you with
+# to keep a purely synchronous application.
+#
+# This file must be loaded before other defined in this same directory.
+#
+services:
+    _defaults:
+        autowire: true
+        autoconfigure: true
+        public: false
+
+    corebus.command.bus.asynchronous.security:
+        public: false
+        class: MakinaCorpus\CoreBus\CommandBus\Bus\SymfonySecurityCommandBusDecorator
+        decorates: "corebus.command.bus.asynchronous"
+        arguments: ['@security.helper', '@.inner']
+
+    corebus.command.bus.synchronous.security:
+        public: false
+        class: MakinaCorpus\CoreBus\CommandBus\Bus\SymfonySecurityCommandBusDecorator
+        decorates: "corebus.command.bus.synchronous"
+        arguments: ['@security.helper', '@.inner']
