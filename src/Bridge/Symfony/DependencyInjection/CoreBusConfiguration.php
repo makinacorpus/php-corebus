@@ -37,6 +37,13 @@ final class CoreBusConfiguration implements ConfigurationInterface
                     ->end()
                 ->end()
 
+                // Access control configuration.
+                ->arrayNode('access_control')
+                    ->children()
+                        ->booleanNode('enabled')->defaultFalse()->end()
+                    ->end()
+                ->end()
+
                 // Transaction adapter configuration.
                 ->arrayNode('transaction')
                     ->children()

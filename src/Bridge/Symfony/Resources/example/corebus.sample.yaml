@@ -48,6 +48,15 @@ core_bus:
             retry_count: 3
 
     #
+    # Access control configuration.
+    #
+    # Since this is a relatively new feature, this is disabled per default
+    # in order to avoid upgrading projects from breaking.
+    #
+    access_control:
+        enabled: false
+
+    #
     # Transaction manager for handling your database transactions.
     #
     # There is only one working implementation at this time which

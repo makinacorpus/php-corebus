@@ -42,7 +42,7 @@ final class CoreBusExtension extends Extension
         $loader->load('corebus.core.yaml');
         $loader->load('corebus.console.yaml');
 
-        if ($accessControlDetected) {
+        if ($accessControlDetected && ($config['access_control']['enabled'] ?? false)) {
             $loader->load('corebus.access_control.yaml');
         }
 
