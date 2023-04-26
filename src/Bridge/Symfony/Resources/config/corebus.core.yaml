@@ -18,7 +18,7 @@ services:
 
     corebus.argument_resolver:
         class: MakinaCorpus\ArgumentResolver\DefaultArgumentResolver
-        tags: [{ name: argument_resolver, id: corebus }]
+        tags: [{ name: custom.argument_resolver, id: corebus }]
 
     #
     # Transactions manager

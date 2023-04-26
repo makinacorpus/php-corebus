@@ -15,12 +15,12 @@
     "require": {
         "php": ">=8.0",
         "psr/log": "^1.0 || ^2.0 || ^3.0",
-        "makinacorpus/argument-resolver": "^1.0",
+        "makinacorpus/argument-resolver": "^1.0.4",
         "makinacorpus/message": "^1.1.0"
     },
     "require-dev": {
         "friendsofphp/php-cs-fixer": "^2.16",
-        "makinacorpus/access-control": "^1.0",
+        "makinacorpus/access-control": "^1.2.2",
         "makinacorpus/event-store": "^1.0.4",
         "makinacorpus/goat-query-bundle": "^3.1",
         "makinacorpus/message-broker": "^2.0.0",
