@@ -267,7 +267,7 @@ class BusAwareTestCase extends TestCase
         if (\is_string($handler)) {
             $className = $handler;
 
-            $object = $this->createObject($className);
+            $object = $this->createObject($className, $this->createArgumentResolver(null, true), $context);
 
             $container = new Container();
             $container->set($className, $object);
