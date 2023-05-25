@@ -34,7 +34,7 @@ class DispatcherRetryableError extends \RuntimeException implements CoreBusError
         if ($e instanceof self) {
             $ret = $e;
         } else {
-            $ret = new static($e->getMessage(), $e->getCode(), $e);
+            $ret = new self($e->getMessage(), $e->getCode(), $e);
         }
 
         $ret->response = $response;

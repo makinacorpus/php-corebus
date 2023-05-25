@@ -93,7 +93,6 @@ class ClassParser
         }
     }
 
-    /** @return list<CommandHandler|EventListener> */
     private function hasAttribute(/* \ReflectionClass|\ReflectionMethod */ $ref): bool
     {
         switch ($this->target) {
@@ -106,7 +105,7 @@ class ClassParser
         }
     }
 
-    /** @return list<CommandHandler|EventListener> */
+    /** @return list<\ReflectionAttribute> */
     private function findAttributes(/* \ReflectionClass|\ReflectionMethod */ $ref): iterable
     {
         switch ($this->target) {

@@ -11,6 +11,6 @@ class CommandHandlerNotFoundError extends \DomainException
 {
     public static function fromCommand($command): self
     {
-        return new static(\sprintf("Handler for command %s could not be found.", \get_class($command)));
+        return new self(\sprintf("Handler for command %s could not be found.", \get_class($command)));
     }
 }

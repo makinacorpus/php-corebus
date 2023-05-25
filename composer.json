@@ -16,7 +16,7 @@
         "php": ">=8.0",
         "psr/log": "^1.0 || ^2.0 || ^3.0",
         "makinacorpus/argument-resolver": "^1.0.4",
-        "makinacorpus/message": "^1.1.0"
+        "makinacorpus/message": "^1.1"
     },
     "require-dev": {
         "friendsofphp/php-cs-fixer": "^2.16",
@@ -32,7 +32,9 @@
         "symfony/http-kernel": "^5.4 || ^6.0",
         "symfony/property-access": "^5.4 || ^6.0",
         "symfony/serializer": "^5.4 || ^6.0",
-        "symfony/yaml": "^5.4 || ^6.0"
+        "symfony/yaml": "^5.4 || ^6.0",
+        "phpstan/phpstan": "^1.10",
+        "symfony/security-bundle": "^5.4|^6.0"
     },
     "autoload": {
         "psr-4": {

@@ -6,6 +6,7 @@ namespace MakinaCorpus\CoreBus\CommandBus\RetryStrategy;
 
 use MakinaCorpus\CoreBus\CommandBus\CommandConsumer;
 use MakinaCorpus\CoreBus\CommandBus\CommandResponsePromise;
+use MakinaCorpus\CoreBus\CommandBus\Response\NeverCommandResponsePromise;
 use MakinaCorpus\Message\Envelope;
 use MakinaCorpus\Message\Property;
 use MakinaCorpus\MessageBroker\MessageConsumer;
@@ -90,6 +91,8 @@ final class RetryStrategyCommandConsumerDecorator implements CommandConsumer, Lo
                 throw $e;
             }
         }
+
+        return $response ?? new NeverCommandResponsePromise();
     }
 
     /**

@@ -7,6 +7,7 @@ namespace MakinaCorpus\CoreBus\Bridge\Testing;
 use MakinaCorpus\CoreBus\CommandBus\CommandResponsePromise;
 use MakinaCorpus\CoreBus\CommandBus\SynchronousCommandBus;
 use MakinaCorpus\CoreBus\CommandBus\Bus\AbstractCommandBus;
+use MakinaCorpus\CoreBus\CommandBus\Response\NeverCommandResponsePromise;
 
 class MockSynchronousCommandBus extends AbstractCommandBus implements SynchronousCommandBus
 {
@@ -92,6 +93,8 @@ class MockSynchronousCommandBus extends AbstractCommandBus implements Synchronou
                     }
                 }
             }
+
+            return new NeverCommandResponsePromise();
         }
     }
 }

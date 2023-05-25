@@ -103,7 +103,7 @@ final class CoreBusExtension extends Extension
 
         if ($config['command_bus']['retry_strategy']['enabled'] ?? false) {
             if (!$messageBrokerEnabled) {
-                throw new InvalidArgumentException(\sprintf("'corebus.command_bus.retry_strategy.enabled' requires that 'command_bus.adapter' is set to 'message_broker'.", EventStoreBundle::class));
+                throw new InvalidArgumentException("'corebus.command_bus.retry_strategy.enabled' requires that 'command_bus.adapter' is set to 'message_broker'.");
             }
             $loader->load('corebus.retry_strategy.yaml');
 

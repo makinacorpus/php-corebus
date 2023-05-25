@@ -19,11 +19,6 @@ class TestingEventBus implements EventBus
     /** @var object[] */
     private array $listeners = [];
 
-    public function __construct()
-    {
-        $this->logger = new NullLogger();
-    }
-
     /**
      * {@inheritdoc}
      */

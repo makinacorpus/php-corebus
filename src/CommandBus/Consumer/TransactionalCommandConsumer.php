@@ -9,6 +9,7 @@ use MakinaCorpus\CoreBus\Attr\NoTransaction;
 use MakinaCorpus\CoreBus\Attr\Loader\AttributeLoader;
 use MakinaCorpus\CoreBus\CommandBus\CommandConsumer;
 use MakinaCorpus\CoreBus\CommandBus\CommandResponsePromise;
+use MakinaCorpus\CoreBus\CommandBus\Response\NeverCommandResponsePromise;
 use MakinaCorpus\CoreBus\CommandBus\Transaction\MultiCommand;
 use MakinaCorpus\CoreBus\EventBus\EventBus;
 use MakinaCorpus\CoreBus\EventBus\Buffer\EventBuffer;
@@ -111,7 +112,7 @@ final class TransactionalCommandConsumer implements CommandConsumer, EventBus, L
 
             $this->flush();
 
-            return $response;
+            return $response ?? new NeverCommandResponsePromise();
 
         } catch (\Throwable $e) {
             $this->logger->error("TransactionalCommandConsumer: Transaction failed at item {index}/{total}, rollbacking.", ['index' => $count, 'total' => $total]);

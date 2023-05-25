@@ -128,7 +128,7 @@ final class CommandWorkerCommand extends Command implements LoggerAwareInterface
 
         $eventDispatcher->addListener(
             WorkerEvent::NEXT,
-            function (WorkerEvent $event) use ($output, $handleTick, &$messageCount, &$currentMemory) {
+            function (WorkerEvent $event) use ($output, &$messageCount, &$currentMemory) {
                 $messageCount++;
                 if ($output->isVerbose()) {
                     $output->writeln(\sprintf("%s - NEXT message #%d: %s - MEMORY %d bytes.", self::nowAsString(), $messageCount, self::messageAsString($event->getMessage()), $currentMemory));
@@ -183,7 +183,7 @@ final class CommandWorkerCommand extends Command implements LoggerAwareInterface
                 $memoryLimit = \round($memoryLimit * 0.9);
                 $output->writeln(\sprintf("PHP memory limit is lower than 128M, reserving 10%%, memory limit set to %d bytes.", $memoryLimit));
 
-                return $output;
+                return (int) $memoryLimit;
             }
 
             // More than 128M, we reserve 16M.

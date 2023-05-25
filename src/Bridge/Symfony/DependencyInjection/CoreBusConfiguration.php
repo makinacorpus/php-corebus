@@ -18,6 +18,7 @@ final class CoreBusConfiguration implements ConfigurationInterface
 
         $rootNode = $treeBuilder->getRootNode();
 
+        /* @phpstan-ignore-next-line */
         $rootNode
             ->children()
                 // Command bus adapter configuration.

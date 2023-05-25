@@ -22,7 +22,7 @@ final class Retry extends Command
         $this->count = $count ?? 3;
     }
 
-    public function getRetryCount(): string
+    public function getRetryCount(): int
     {
         return $this->count;
     }

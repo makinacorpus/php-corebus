@@ -36,7 +36,7 @@ final class ReplyToCommandConsumer implements CommandConsumer, LoggerAwareInterf
     {
         $response = $this->decorated->consumeCommand($command);
 
-        if (!$command instanceof Envelope || !($replyToQueue = $command->getReplyTo())) {
+        if (!$command instanceof Envelope || !($replyToQueue = $command->getPropertyBag()->getReplyTo())) {
             return $response;
         }
 

@@ -152,7 +152,7 @@ class BusAwareTestCase extends TestCase
         $refMethod = $refClass->getConstructor();
         if ($refMethod) {
             if (!$refMethod->isPublic()) {
-                throw new \LogicException(\sprintf("Class %s constructor is not public."));
+                throw new \LogicException(\sprintf("Class %s constructor is not public.", $className));
             }
 
             // We need an instance for having a constructor closure. There is
