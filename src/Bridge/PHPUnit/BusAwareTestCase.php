@@ -181,6 +181,7 @@ class BusAwareTestCase extends TestCase
      * For backward compatibility, please do not use this.
      *
      * @deprecated
+     * @see prepareObject()
      */
     protected function createHandler(string $handlerClass, array $params): object
     {
@@ -210,26 +211,49 @@ class BusAwareTestCase extends TestCase
      *   - automatic constructor injection for command handlers,
      *   - automatic argument value injection for command handler methods.
      */
-    protected function registerService(object $service, string ...$aliases): void
+    private function doRegisterService(bool $allowOverride, object $service, string ...$aliases): void
     {
+        $localAliases = [];
+
         // Work on a temporary copy in order to avoid polluting the current
         // service list in case of error.
         $services = $this->services;
 
-        $className = \get_class($service);
+        $localAliases[] = $className = \get_class($service);
         if (isset($services[$className])) {
             throw new \LogicException(\sprintf("Service with class %s is already defined.", $className));
         }
 
         foreach ($aliases as $name) {
-            if ($shadowed = ($services[$name] ?? null)) {
+            if (!$allowOverride && !\in_array($name, $localAliases) && ($shadowed = ($services[$name] ?? null))) {
                 throw new \LogicException(\sprintf("Alias %s for service %s is already in use by service %s.", $name, $className, \get_class($shadowed)));
             }
+            $localAliases[] = $name;
             $services[$name] = $service;
         }
         $services[$className] = $service;
 
         $this->services = $services;
+    }
+
+    /**
+     * Register a service for the test case, it will allow:
+     *   - automatic constructor injection for command handlers,
+     *   - automatic argument value injection for command handler methods.
+     */
+    protected function overrideService(object $service, string ...$aliases): void
+    {
+        $this->doRegisterService(true, $service, ...$aliases);
+    }
+
+    /**
+     * Register a service for the test case, it will allow:
+     *   - automatic constructor injection for command handlers,
+     *   - automatic argument value injection for command handler methods.
+     */
+    protected function registerService(object $service, string ...$aliases): void
+    {
+        $this->doRegisterService(false, $service, ...$aliases);
     }
 
     /**
