@@ -130,20 +130,10 @@ PHP
 
         \fwrite($handle, "\n");
 
-        if ($this->allowMultiple) {
-            \fwrite($handle, <<<PHP
-        \$candidates = [\$className] + \\class_parents(\$className) + \\class_implements(\$className);
-
-        foreach (\$candidates as \$candidate) switch (\$candidate) {
-PHP
-            );
-
-        } else {
-            \fwrite($handle, <<<PHP
+        \fwrite($handle, <<<PHP
         switch (\$className) {
 PHP
-            );
-        }
+        );
 
         \fwrite($handle, "\n");
 
